@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -15,8 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import static cn.demomaster.qdlogger_library.QDFileUtil.createFile;
 
 /**
  * 日志打印帮助类
@@ -49,99 +46,116 @@ public class QDLogger {
 
     /**********  i ***********/
     public static void i(Object obj) {
-        Log(null, LoggerType.INFO, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.INFO, TAG, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void i(String tag, Object obj) {
-        Log(null, LoggerType.INFO, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.INFO, tag, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void i(Context context, Object obj) {
-        Log(context, LoggerType.INFO, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.INFO, TAG, obj);
+        doLog(context, QDLogBean);
     }
 
     public static void i(Context context, String tag, Object obj) {
-        Log(context, LoggerType.INFO, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.INFO, tag, obj);
+        doLog(context, QDLogBean);
     }
 
     /**********  d ***********/
     public static void d(String tag, Object obj) {
-        Log(null, LoggerType.DEBUG, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.DEBUG, tag, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void d(Object obj) {
-        Log(null, LoggerType.DEBUG, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.DEBUG, TAG, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void d(Context context, Object obj) {
-        Log(context, LoggerType.DEBUG, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.DEBUG, TAG, obj);
+        doLog(context, QDLogBean);
     }
 
     public static void d(Context context, String tag, Object obj) {
-        Log(context, LoggerType.DEBUG, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.DEBUG, tag, obj);
+        doLog(context, QDLogBean);
     }
     /**********  e ***********/
     public static void e(String tag, Object obj) {
-        Log(null, LoggerType.ERROR, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void e(String tag, Object obj, Throwable tr) {
-        doLog(null, LoggerType.ERROR, tag, obj, tr);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void e(Object obj) {
-        Log(null, LoggerType.ERROR, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, TAG, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void e(Context context, Object obj) {
-        Log(context, LoggerType.ERROR, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, TAG, obj);
+        doLog(context, QDLogBean);
     }
 
     public static void e(Context context, String tag, Object obj) {
-        Log(context, LoggerType.ERROR, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
+        doLog(context, QDLogBean);
     }
 
     public static void e(Context context, String tag, Object obj, Throwable tr) {
-        doLog(context, LoggerType.ERROR, tag, obj, tr);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
+        doLog(context, QDLogBean);
     }
 
     /**********  v ***********/
     public static void v(String tag, Object obj) {
-        Log(null, LoggerType.VERBOSE, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.VERBOSE, tag, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void v(Object obj) {
-        Log(null, LoggerType.VERBOSE, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.VERBOSE, TAG, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void v(Context context, Object obj) {
-        Log(context, LoggerType.VERBOSE, TAG, obj.toString());
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.VERBOSE, TAG, obj);
+        doLog(context, QDLogBean);
     }
 
     public static void v(Context context, String tag, Object obj) {
-        Log(context, LoggerType.VERBOSE, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.VERBOSE, tag, obj);
+        doLog(context, QDLogBean);
     }
 
     /**********  w ***********/
     public static void w(String tag, Object obj) {
-        Log(null, LoggerType.WARN, tag, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.WARN, tag, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void w(Object obj) {
-        Log(null, LoggerType.WARN, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.WARN, TAG, obj);
+        doLog(null, QDLogBean);
     }
 
     public static void w(Context context, Object obj) {
-        Log(context, LoggerType.WARN, TAG, obj);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.WARN, TAG, obj);
+        doLog(context, QDLogBean);
     }
 
   /*  private static void Log(Logger logType, String tag, Object obj) {
         Log(null, logType, tag, obj);
     }*/
-
-    private static void Log(Context context, LoggerType logType, String tag, Object obj) {
-        doLog(context, logType, tag, obj, null);
-    }
 
     public static void println(Object message) {
         printlndo("", message);
@@ -152,13 +166,11 @@ public class QDLogger {
     }
 
     private static void printlndo(String tag, Object obj) {
-        String message = obj == null ? "null" : obj.toString();
-
-        LogBean logBean = new LogBean(LoggerType.PRINTLN, tag, message);
-        String logStr = generateMessage(logBean);
+        QDLogBean QDLogBean = new QDLogBean(QDLoggerType.PRINTLN, tag, obj);
+        String logStr = generateMessage(QDLogBean);
         System.out.println(logStr);
         if (mLogInterceptor != null) {
-            mLogInterceptor.onLog(logBean);
+            mLogInterceptor.onLog(QDLogBean);
         }
     }
 
@@ -185,7 +197,10 @@ public class QDLogger {
     }
 
     static String permissions = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-    private static void doLog(Context context, LoggerType logType, String tag, Object msgObj, Throwable throwable) {
+    private static void doLog(Context context, QDLogBean QDLogBean) {
+        if(context!=null){
+            init(context);
+        }
         if(mContext==null){
             try {
                 throw new Exception("QDLogger 未初始化");
@@ -194,15 +209,14 @@ public class QDLogger {
             }
         }
 
-        LogBean logBean = new LogBean(logType, tag, msgObj);
         String logStr;
-        if (msgObj instanceof Throwable) {
+        if (QDLogBean.getMessage() instanceof Throwable) {
             if (BuildConfig.DEBUG) {
-                ((Throwable) msgObj).printStackTrace();
+                ((Throwable) QDLogBean.getMessage()).printStackTrace();
             }
-            logStr = generateErrorMessage(logBean);
+            logStr = generateErrorMessage(QDLogBean);
         } else {
-            logStr = generateMessage(logBean);
+            logStr = generateMessage(QDLogBean);
         }
         if (mContext == null) {
             Log.e(TAG, TAG + "未初始化，" + logStr);
@@ -210,24 +224,31 @@ public class QDLogger {
         }
 
         if (mLogInterceptor != null) {
-            mLogInterceptor.onLog(logBean);
+            mLogInterceptor.onLog(QDLogBean);
         }
 
         //正常打印日志
-        if (logType == LoggerType.VERBOSE) {
-            Log.v(tag, logStr);
-        } else if (logType == LoggerType.INFO) {
-            Log.i(tag, logStr);
-        } else if (logType == LoggerType.WARN) {
-            Log.w(tag, logStr);
-        } else if (logType == LoggerType.DEBUG) {
-            Log.d(tag, logStr);
-        } else if (logType == LoggerType.ERROR) {
-            Log.e(tag, logStr);
-        } else if (logType == LoggerType.PRINTLN) {
-            printlndo("", logStr);
-            return;
+        switch (QDLogBean.getType()){
+            case VERBOSE:
+                Log.v(QDLogBean.getTag(), logStr);
+                break;
+            case INFO:
+                Log.i(QDLogBean.getTag(), logStr);
+                break;
+            case WARN:
+                Log.w(QDLogBean.getTag(), logStr);
+                break;
+            case DEBUG:
+                Log.d(QDLogBean.getTag(), logStr);
+                break;
+            case ERROR:
+                Log.e(QDLogBean.getTag(), logStr);
+                break;
+            case PRINTLN:
+                printlndo("", logStr);
+                return;
         }
+
         if(enable) {
             //如果配置了日志目录，则打印log到指定目录
             if (!TextUtils.isEmpty(getLogDirPath())) {
@@ -254,7 +275,7 @@ public class QDLogger {
                         logBuffer.append(logStr);
                     }
                 } else {
-                    String err = "log 打印失败，请打开存储权限 - " + logStr;
+                    String err = "log 打印失败，请打开存储权限:" + logStr;
                     Log.e(TAG, err);
                     //throw new IllegalArgumentException(err);
                 }
@@ -293,7 +314,6 @@ public class QDLogger {
 
     //是否显打印空字符串
     private static boolean checkNull = false;
-
     public static void setCheckNull(boolean show) {
         checkNull = show;
     }
@@ -304,50 +324,55 @@ public class QDLogger {
      * @param
      * @return
      */
-    private static String generateMessage(LogBean logBean) {
-        System.out.println("generateMessage");
+    private static String generateMessage(QDLogBean QDLogBean) {
+        //System.out.println("generateMessage");
         String str = String.format("\n%s", logDateFormat.format(new Date()));
         if (showTag) {
-            str += String.format("-%s", logBean.getThreadId());
+            str += String.format("-%s", QDLogBean.getThreadId());
         }
         if (showThreadInfo) {
-            str += String.format("-[Thread:%s]", logBean.getThreadId());
+            str += String.format("-[Thread:%s]", QDLogBean.getThreadId());
         }
-        str += " "+logBean.getMessage();
+        str += " "+ QDLogBean.getMessage();
         if (showClassInfo) {
-            if(logBean.getStackTraceElements()!=null)
-            for(StackTraceElement stackTraceElement : logBean.getStackTraceElements()){
+            if(QDLogBean.getStackTraceElements()!=null)
+            for(StackTraceElement stackTraceElement : QDLogBean.getStackTraceElements()){
                 str += "\n|"+String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
             }
         }
         return str;
     }
 
-    private static String generateErrorMessage(LogBean logBean) {
-        System.out.println("generateErrorMessage");
-        logBean = formatLoger(logBean);
+    /**
+     * 错误日志
+     * @param QDLogBean
+     * @return
+     */
+    private static String generateErrorMessage(QDLogBean QDLogBean) {
+        //System.out.println("generateErrorMessage");
+        QDLogBean = formatLoger(QDLogBean);
         String str = String.format("\n%s", logDateFormat.format(new Date()));
-        str += String.format("-%s", logBean.getType());
-        str += String.format("-[Thread:%s]", logBean.getThreadId());
-        str += String.format("\n%s", logBean.getMessage());
-        if(logBean.getStackTraceElements()!=null)
-        for(StackTraceElement stackTraceElement : logBean.getStackTraceElements()){
+        str += String.format("-%s", QDLogBean.getType());
+        str += String.format("-[Thread:%s]", QDLogBean.getThreadId());
+        str += String.format("\n%s", QDLogBean.getMessage());
+        if(QDLogBean.getStackTraceElements()!=null)
+        for(StackTraceElement stackTraceElement : QDLogBean.getStackTraceElements()){
             str += "\n"+String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
         }
         return str;
     }
 
-    private static LogBean formatLoger(LogBean logBean) {
-        if (showClassInfo || (logBean.getMessage() != null && logBean.getMessage() instanceof Throwable)) {
+    private static QDLogBean formatLoger(QDLogBean QDLogBean) {
+        if (showClassInfo || (QDLogBean.getMessage() != null && QDLogBean.getMessage() instanceof Throwable)) {
             StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-            logBean.setStackTraceElements(stackTraceElements);
+            QDLogBean.setStackTraceElements(stackTraceElements);
         }
-        System.out.println("formatLoger");
-        if (showThreadInfo || (logBean.getMessage() != null && logBean.getMessage() instanceof Throwable)) {
+        //System.out.println("formatLoger");
+        if (showThreadInfo || (QDLogBean.getMessage() != null && QDLogBean.getMessage() instanceof Throwable)) {
             long threadId = Thread.currentThread().getId();
-            logBean.setThreadId(threadId);
+            QDLogBean.setThreadId(threadId);
         }
-        return logBean;
+        return QDLogBean;
     }
 
     //日志文件存放目录
@@ -418,13 +443,13 @@ public class QDLogger {
         return color;
     }
 
-    static LogInterceptor mLogInterceptor;
+    static QDLogInterceptor mLogInterceptor;
 
     /**
      * 日志拦截器
      * @param logInterceptor
      */
-    public static void setInterceptor(LogInterceptor logInterceptor) {
+    public static void setInterceptor(QDLogInterceptor logInterceptor) {
         mLogInterceptor = logInterceptor;
     }
 

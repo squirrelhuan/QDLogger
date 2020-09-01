@@ -1,23 +1,23 @@
 package cn.demomaster.qdlogger_library;
 
-public class LogBean {
-    private LoggerType type;
+public class QDLogBean {
+    private QDLoggerType type;
     private Object message;
     private String tag;
     private StackTraceElement[] stackTraceElements;
     private long threadId = -1;
 
-    public LogBean(LoggerType type, String tag, Object message) {
+    public QDLogBean(QDLoggerType type, String tag, Object message) {
         this.type = type;
         this.message = message;
         this.tag = tag;
     }
 
-    public LoggerType getType() {
+    public QDLoggerType getType() {
         return type;
     }
 
-    public void setType(LoggerType type) {
+    public void setType(QDLoggerType type) {
         this.type = type;
     }
 

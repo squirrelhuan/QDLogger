@@ -2,7 +2,7 @@ package cn.demomaster.qdlogger_library;
 
 import android.util.Log;
 
-public enum LoggerType {
+public enum QDLoggerType {
     ALL(-2),
     INFO(Log.INFO),
     DEBUG(Log.DEBUG),
@@ -13,7 +13,7 @@ public enum LoggerType {
 
     private int value = 0;
 
-    LoggerType(int value) {//必须是private的，否则编译错误
+    QDLoggerType(int value) {//必须是private的，否则编译错误
         this.value = value;
     }
 
