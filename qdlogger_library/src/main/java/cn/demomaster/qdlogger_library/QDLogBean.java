@@ -6,11 +6,23 @@ public class QDLogBean {
     private String tag;
     private StackTraceElement[] stackTraceElements;
     private long threadId = -1;
+    private Throwable throwable;
 
     public QDLogBean(QDLoggerType type, String tag, Object message) {
         this.type = type;
         this.message = message;
         this.tag = tag;
+        if(message instanceof Throwable){
+            this.throwable= (Throwable) message;
+        }
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    public void setThrowable(Throwable throwable) {
+        this.throwable = throwable;
     }
 
     public QDLoggerType getType() {

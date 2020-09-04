@@ -26,6 +26,7 @@ public class QDLogger {
     private static int bufferMaxSize = 10 * 1024;
     private static StringBuffer logBuffer;
     static LoggerWriter loggerWriter;
+
     public static void init(Context context) {
         mContext = context.getApplicationContext();
         if (logBuffer == null) {
@@ -85,6 +86,7 @@ public class QDLogger {
         QDLogBean QDLogBean = new QDLogBean(QDLoggerType.DEBUG, tag, obj);
         doLog(context, QDLogBean);
     }
+
     /**********  e ***********/
     public static void e(String tag, Object obj) {
         QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
@@ -93,6 +95,7 @@ public class QDLogger {
 
     public static void e(String tag, Object obj, Throwable tr) {
         QDLogBean QDLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
+        QDLogBean.setThrowable(tr);
         doLog(null, QDLogBean);
     }
 
@@ -197,11 +200,12 @@ public class QDLogger {
     }
 
     static String permissions = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-    private static void doLog(Context context, QDLogBean QDLogBean) {
-        if(context!=null){
+
+    private static void doLog(Context context, QDLogBean qdLogBean) {
+        if (context != null) {
             init(context);
         }
-        if(mContext==null){
+        if (mContext == null) {
             try {
                 throw new Exception("QDLogger 未初始化");
             } catch (Exception e) {
@@ -209,14 +213,11 @@ public class QDLogger {
             }
         }
 
-        String logStr;
-        if (QDLogBean.getMessage() instanceof Throwable) {
-            if (BuildConfig.DEBUG) {
-                ((Throwable) QDLogBean.getMessage()).printStackTrace();
-            }
-            logStr = generateErrorMessage(QDLogBean);
+        String logStr = null;
+        if (qdLogBean.getThrowable() != null) {
+            logStr = generateErrorMessage(qdLogBean);
         } else {
-            logStr = generateMessage(QDLogBean);
+            logStr = generateMessage(qdLogBean);
         }
         if (mContext == null) {
             Log.e(TAG, TAG + "未初始化，" + logStr);
@@ -224,32 +225,32 @@ public class QDLogger {
         }
 
         if (mLogInterceptor != null) {
-            mLogInterceptor.onLog(QDLogBean);
+            mLogInterceptor.onLog(qdLogBean);
         }
 
         //正常打印日志
-        switch (QDLogBean.getType()){
+        switch (qdLogBean.getType()) {
             case VERBOSE:
-                Log.v(QDLogBean.getTag(), logStr);
+                Log.v(qdLogBean.getTag(), logStr);
                 break;
             case INFO:
-                Log.i(QDLogBean.getTag(), logStr);
+                Log.i(qdLogBean.getTag(), logStr);
                 break;
             case WARN:
-                Log.w(QDLogBean.getTag(), logStr);
+                Log.w(qdLogBean.getTag(), logStr);
                 break;
             case DEBUG:
-                Log.d(QDLogBean.getTag(), logStr);
+                Log.d(qdLogBean.getTag(), logStr);
                 break;
             case ERROR:
-                Log.e(QDLogBean.getTag(), logStr);
+                Log.e(qdLogBean.getTag(), logStr);
                 break;
             case PRINTLN:
                 printlndo("", logStr);
                 return;
         }
 
-        if(enable) {
+        if (enable) {
             //如果配置了日志目录，则打印log到指定目录
             if (!TextUtils.isEmpty(getLogDirPath())) {
                 // 检查该权限是否已经获取
@@ -263,9 +264,9 @@ public class QDLogger {
                             String cacheStr = new String(logBuffer);
                             int sb_length = logBuffer.length();// 取得字符串的长度
                             logBuffer.delete(0, sb_length);    //删除字符串从0~sb_length-1处的内容 (这个方法就是用来清除StringBuffer中的内容的)
-                            loggerWriter.writeLog(logFilePath,cacheStr);
+                            loggerWriter.writeLog(logFilePath, cacheStr);
                         }
-                        loggerWriter.writeLog(logFilePath,logStr);
+                        loggerWriter.writeLog(logFilePath, logStr);
                     } else {
                         //添加到缓存，但是缓存有大小限制，超过缓存大小，清除之前的缓存
                         int ds = logBuffer.length() - bufferMaxSize;
@@ -314,6 +315,7 @@ public class QDLogger {
 
     //是否显打印空字符串
     private static boolean checkNull = false;
+
     public static void setCheckNull(boolean show) {
         checkNull = show;
     }
@@ -333,32 +335,35 @@ public class QDLogger {
         if (showThreadInfo) {
             str += String.format("-[Thread:%s]", QDLogBean.getThreadId());
         }
-        str += " "+ QDLogBean.getMessage();
+        str += " " + QDLogBean.getMessage();
         if (showClassInfo) {
-            if(QDLogBean.getStackTraceElements()!=null)
-            for(StackTraceElement stackTraceElement : QDLogBean.getStackTraceElements()){
-                str += "\n|"+String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
-            }
+            if (QDLogBean.getStackTraceElements() != null)
+                for (StackTraceElement stackTraceElement : QDLogBean.getStackTraceElements()) {
+                    str += "\n|" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+                }
         }
         return str;
     }
 
     /**
      * 错误日志
-     * @param QDLogBean
+     *
+     * @param qdLogBean
      * @return
      */
-    private static String generateErrorMessage(QDLogBean QDLogBean) {
-        //System.out.println("generateErrorMessage");
-        QDLogBean = formatLoger(QDLogBean);
-        String str = String.format("\n%s", logDateFormat.format(new Date()));
-        str += String.format("-%s", QDLogBean.getType());
-        str += String.format("-[Thread:%s]", QDLogBean.getThreadId());
-        str += String.format("\n%s", QDLogBean.getMessage());
-        if(QDLogBean.getStackTraceElements()!=null)
-        for(StackTraceElement stackTraceElement : QDLogBean.getStackTraceElements()){
-            str += "\n"+String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+    private static String generateErrorMessage(QDLogBean qdLogBean) {
+        if (BuildConfig.DEBUG) {
+            ((Throwable) qdLogBean.getThrowable()).printStackTrace();
         }
+        qdLogBean = formatLoger(qdLogBean);
+        String str = String.format("\n%s", logDateFormat.format(new Date()));
+        str += String.format("-%s", qdLogBean.getType());
+        str += String.format("-[Thread:%s]", qdLogBean.getThreadId());
+        str += String.format("\n%s", qdLogBean.getThrowable());
+        if (qdLogBean.getStackTraceElements() != null)
+            for (StackTraceElement stackTraceElement : qdLogBean.getStackTraceElements()) {
+                str += "\n" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+            }
         return str;
     }
 
@@ -377,9 +382,11 @@ public class QDLogger {
 
     //日志文件存放目录
     public static String LogFileDir;
-    public static void setLogPath(String dirPath){
+
+    public static void setLogPath(String dirPath) {
         LogFileDir = dirPath;
     }
+
     /**
      * 获取日志文件存放目录
      *
@@ -447,6 +454,7 @@ public class QDLogger {
 
     /**
      * 日志拦截器
+     *
      * @param logInterceptor
      */
     public static void setInterceptor(QDLogInterceptor logInterceptor) {
