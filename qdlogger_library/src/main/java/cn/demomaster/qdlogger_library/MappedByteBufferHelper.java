@@ -1,12 +1,18 @@
 package cn.demomaster.qdlogger_library;
 
+import android.os.Environment;
+import android.util.Log;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 import java.nio.BufferOverflowException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+
+import static cn.demomaster.qdlogger_library.QDFileUtil.createFile;
 
 public class MappedByteBufferHelper {
 
@@ -31,6 +37,11 @@ public class MappedByteBufferHelper {
             return map(file, randomAccessFile, position, size);
         } catch (Exception ex) {
             ex.printStackTrace();
+            if(ex instanceof FileNotFoundException){
+                if(!file.exists()){
+                    QDFileUtil.createFile(file);
+                }
+            }
         }
         return null;
     }
@@ -61,6 +72,7 @@ public class MappedByteBufferHelper {
      */
     public static void delNulAtLastLine(String fileName) {
         RandomAccessFile file = null;
+        //Log.e("cgq","delNulAtLastLine");
         try {
             file = new RandomAccessFile(fileName, "rw");
             if (file != null&&file.length()>0) {
@@ -85,6 +97,12 @@ public class MappedByteBufferHelper {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            if(e instanceof FileNotFoundException){
+                File file2 = new File(fileName);
+                if (!file2.exists()) {
+                    createFile(file2);
+                }
+            }
         } finally {
             if (file != null) {
                 try {

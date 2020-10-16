@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -27,14 +29,17 @@ public class QDLogger {
     private static StringBuffer logBuffer;
     static LoggerWriter loggerWriter;
 
-    public static void init(Context context) {
+    public static void init(Context context,String logFilePath) {
         mContext = context.getApplicationContext();
+        setLogPath(logFilePath);
         if (logBuffer == null) {
             logBuffer = new StringBuffer();
             logBuffer.append("\n[QDLogger Start]");
         }
-        loggerWriter = new MapBufferWriter();
-        //loggerWriter = new FileWriter();
+        if(loggerWriter==null) {
+            loggerWriter = new MapBufferWriter();
+            //loggerWriter = new FileWriter();
+        }
     }
 
     public static void setEnable(boolean enable) {
@@ -200,11 +205,7 @@ public class QDLogger {
     }
 
     static String permissions = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-
     private static void doLog(Context context, QDLogBean qdLogBean) {
-        if (context != null) {
-            init(context);
-        }
         if (mContext == null) {
             try {
                 throw new Exception("QDLogger 未初始化");
@@ -252,11 +253,10 @@ public class QDLogger {
 
         if (enable) {
             //如果配置了日志目录，则打印log到指定目录
-            if (!TextUtils.isEmpty(getLogDirPath())) {
+            if (!TextUtils.isEmpty(LogFileDir)) {
                 // 检查该权限是否已经获取
                 boolean useful = checkPermissionStatus(mContext, permissions);
                 if (useful) {
-                    String LogFileDir = getLogDirPath();
                     String logFileName = simpleDateFormat2.format(new Date()) + ".txt";
                     String logFilePath = LogFileDir + logFileName;
                     if (canWriteAble) {
@@ -327,7 +327,6 @@ public class QDLogger {
      * @return
      */
     private static String generateMessage(QDLogBean QDLogBean) {
-        //System.out.println("generateMessage");
         String str = String.format("\n%s", logDateFormat.format(new Date()));
         if (showTag) {
             str += String.format("-%s", QDLogBean.getThreadId());
@@ -347,7 +346,6 @@ public class QDLogger {
 
     /**
      * 错误日志
-     *
      * @param qdLogBean
      * @return
      */
@@ -366,45 +364,47 @@ public class QDLogger {
             }
         return str;
     }
-
-    private static QDLogBean formatLoger(QDLogBean QDLogBean) {
-        if (showClassInfo || (QDLogBean.getMessage() != null && QDLogBean.getMessage() instanceof Throwable)) {
-            StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-            QDLogBean.setStackTraceElements(stackTraceElements);
+    /**
+     *格式化日志
+     */
+    private static QDLogBean formatLoger(QDLogBean qdlogBean) {
+        if (showClassInfo || (qdlogBean.getMessage() != null && qdlogBean.getMessage() instanceof Throwable)) {
+            Thread thread = Thread.currentThread();
+            if(thread!=null) {
+                try {
+                    StackTraceElement[] stackTraceElements = thread.getStackTrace();
+                    qdlogBean.setStackTraceElements(stackTraceElements);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
         }
-        //System.out.println("formatLoger");
-        if (showThreadInfo || (QDLogBean.getMessage() != null && QDLogBean.getMessage() instanceof Throwable)) {
-            long threadId = Thread.currentThread().getId();
-            QDLogBean.setThreadId(threadId);
+        if (showThreadInfo || (qdlogBean.getMessage() != null && qdlogBean.getMessage() instanceof Throwable)) {
+            Thread thread = Thread.currentThread();
+            if(thread!=null) {
+                long threadId = thread.getId();
+                qdlogBean.setThreadId(threadId);
+            }
         }
-        return QDLogBean;
+        return qdlogBean;
     }
 
     //日志文件存放目录
     public static String LogFileDir;
-
     public static void setLogPath(String dirPath) {
-        LogFileDir = dirPath;
-    }
-
-    /**
-     * 获取日志文件存放目录
-     *
-     * @return
-     */
-    public static String getLogDirPath() {
-        if (!TextUtils.isEmpty(LogFileDir)) {
-            return LogFileDir;
+        File file;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            File file_documents = mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+            file = new File(file_documents.getAbsoluteFile(),dirPath);
+        }else {
+            file = new File(Environment.getExternalStorageDirectory(),dirPath);
         }
-        if (!TextUtils.isEmpty(LogFileDir)) {
-            if (!LogFileDir.startsWith(File.separator)) {
-                LogFileDir = File.separator + LogFileDir;
-            }
-            if (!LogFileDir.endsWith(File.separator)) {
-                LogFileDir = LogFileDir + File.separator;
+        LogFileDir = file.getAbsolutePath();
+        if(!TextUtils.isEmpty(LogFileDir)){
+            if(!LogFileDir.trim().endsWith(File.separator)){
+                LogFileDir+=File.separator;
             }
         }
-        return LogFileDir;
     }
 
     public static boolean canWriteAble = true;//是否可以读写日志

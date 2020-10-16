@@ -1,6 +1,5 @@
 package cn.demomaster.qdlogger_library;
 
-import android.os.Environment;
 import android.text.TextUtils;
 
 import java.io.File;
@@ -22,7 +21,7 @@ public class MapBufferWriter implements LoggerWriter {
     @Override
     public void writeLog(String logFilePath, String logMsg) {
         //先判断文件是否存在，不存在则创建
-        File file = new File(Environment.getExternalStorageDirectory(), logFilePath);
+        File file = new File(logFilePath);
         if (!file.exists()) {
             createFile(file);
             if (mapByteBuffer != null) {

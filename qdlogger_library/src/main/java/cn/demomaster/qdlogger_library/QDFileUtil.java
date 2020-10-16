@@ -87,7 +87,6 @@ public class QDFileUtil {
         return null;
     }
 
-
     /**
      * 写数据到SD中的文件
      * @param fileName
@@ -96,12 +95,13 @@ public class QDFileUtil {
      */
     public static void writeFileSdcardFile(String dirPath, String fileName,
                                            String write_str, boolean append) throws IOException {
-        File file = new File(Environment.getExternalStorageDirectory(),dirPath + File.separator + fileName);
+        //Environment.getExternalStorageDirectory(),
+        File file = new File(dirPath + File.separator + fileName);
         writeFileSdcardFile(file,write_str,append);
     }
     public static void writeFileSdcardFile(String fileName,
                                            String write_str, boolean append) {
-        File file = new File(Environment.getExternalStorageDirectory(),fileName);
+        File file = new File(fileName);
         writeFileSdcardFile(file,write_str,append);
     }
     public static void writeFileSdcardFile(File file,
@@ -176,7 +176,6 @@ public class QDFileUtil {
             // Convert the buffer into a string.
             text = new String(buffer, "UTF-8");
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             QDLogger.e(e);
         }
         return text;

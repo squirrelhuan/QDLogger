@@ -46,8 +46,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initLogger() {
-        QDLogger.init(this);
-        QDLogger.setLogPath("/qdlogger/");
+        QDLogger.init(this,"/qdlogger/");
         QDLogger.i("123 喊口号,小朋友全立定。");
     }
 
