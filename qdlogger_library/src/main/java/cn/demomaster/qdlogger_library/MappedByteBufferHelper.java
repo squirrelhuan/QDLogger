@@ -137,7 +137,7 @@ public class MappedByteBufferHelper {
                 length += bytes.length;
             } catch (Exception e) {
                 if (e instanceof BufferOverflowException) {
-                    System.out.println("log缓存已满，触发扩容,当前大小：" + length + ",扩展大小：" + size + ",fileSize=" + new File(filePath).length() + ":" + new String(bytes));
+                    System.out.println("log缓存已满，触发扩容,当前大小:" + length + ",扩展大小:" + size + ",文件大小:" + new File(filePath).length() + ":" + new String(bytes));
                     if (randomAccessFile != null) {
                         close();
                     }

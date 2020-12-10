@@ -28,8 +28,18 @@ public class QDLogger {
     private static int bufferMaxSize = 10 * 1024;
     private static StringBuffer logBuffer;
     static LoggerWriter loggerWriter;
+    static boolean fouceUseExternalStorage = false;//强制使用存储文件夹
 
-    public static void init(Context context,String logFilePath) {
+    public static void setFouceUseExternalStorage(boolean fouceUseExternalStorage) {
+        QDLogger.fouceUseExternalStorage = fouceUseExternalStorage;
+    }
+
+    static int writerMode = 0;
+    public static void setWriterMode(int writerMode) {
+        QDLogger.writerMode = writerMode;
+    }
+
+    public static void init(Context context, String logFilePath) {
         mContext = context.getApplicationContext();
         setLogPath(logFilePath);
         if (logBuffer == null) {
@@ -37,8 +47,11 @@ public class QDLogger {
             logBuffer.append("\n[QDLogger Start]");
         }
         if(loggerWriter==null) {
-            loggerWriter = new MapBufferWriter();
-            //loggerWriter = new FileWriter();
+            if(writerMode==0){
+                loggerWriter = new MapBufferWriter();
+            }else {
+                loggerWriter = new FileWriter();
+            }
         }
     }
 
@@ -207,11 +220,8 @@ public class QDLogger {
     static String permissions = Manifest.permission.WRITE_EXTERNAL_STORAGE;
     private static void doLog(Context context, QDLogBean qdLogBean) {
         if (mContext == null) {
-            try {
-                throw new Exception("QDLogger 未初始化");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Log.e(TAG,"QDLogger 未初始化");
+            return;
         }
 
         String logStr = null;
@@ -244,7 +254,11 @@ public class QDLogger {
                 Log.d(qdLogBean.getTag(), logStr);
                 break;
             case ERROR:
-                Log.e(qdLogBean.getTag(), logStr);
+                if (qdLogBean.getThrowable() != null&&BuildConfig.DEBUG) {
+                    ((Throwable) qdLogBean.getThrowable()).printStackTrace();
+                }else {
+                    Log.e(qdLogBean.getTag(), logStr);
+                }
                 break;
             case PRINTLN:
                 printlndo("", logStr);
@@ -338,7 +352,9 @@ public class QDLogger {
         if (showClassInfo) {
             if (QDLogBean.getStackTraceElements() != null)
                 for (StackTraceElement stackTraceElement : QDLogBean.getStackTraceElements()) {
-                    str += "\n|" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+                    if(!stackTraceElement.getClassName().equals(QDLogger.class.getName())) {
+                        str += "\n|" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+                    }
                 }
         }
         return str;
@@ -350,9 +366,6 @@ public class QDLogger {
      * @return
      */
     private static String generateErrorMessage(QDLogBean qdLogBean) {
-        if (BuildConfig.DEBUG) {
-            ((Throwable) qdLogBean.getThrowable()).printStackTrace();
-        }
         qdLogBean = formatLoger(qdLogBean);
         String str = String.format("\n%s", logDateFormat.format(new Date()));
         str += String.format("-%s", qdLogBean.getType());
@@ -360,7 +373,9 @@ public class QDLogger {
         str += String.format("\n%s", qdLogBean.getThrowable());
         if (qdLogBean.getStackTraceElements() != null)
             for (StackTraceElement stackTraceElement : qdLogBean.getStackTraceElements()) {
-                str += "\n" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+                if(!stackTraceElement.getClassName().equals(QDLogger.class.getName())) {
+                    str += "\n" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+                }
             }
         return str;
     }
@@ -393,7 +408,7 @@ public class QDLogger {
     public static String LogFileDir;
     public static void setLogPath(String dirPath) {
         File file;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q&&!fouceUseExternalStorage) {
             File file_documents = mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
             file = new File(file_documents.getAbsoluteFile(),dirPath);
         }else {
