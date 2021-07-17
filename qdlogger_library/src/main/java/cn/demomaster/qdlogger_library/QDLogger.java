@@ -35,7 +35,6 @@ public class QDLogger {
     public static void setFouceUseExternalStorage(boolean fouceUseExternalStorage) {
         QDLogger.fouceUseExternalStorage = fouceUseExternalStorage;
     }
-
     static int writerMode = 0;//写入模式
     public static void setWriterMode(int writerMode) {
         QDLogger.writerMode = writerMode;
