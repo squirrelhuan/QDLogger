@@ -21,7 +21,6 @@ public class LogFormat {
 
     public String formatHeader(String formatStr, QDLogBean qdLogBean){
         Map<Integer,String> valuesMap = new LinkedHashMap<>();
-
         //先解析对应的标签
         if(formatStr.contains("time")){
             valuesMap.put(formatStr.indexOf("time"),"time");
