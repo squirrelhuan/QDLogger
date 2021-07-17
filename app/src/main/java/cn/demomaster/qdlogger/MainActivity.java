@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     int REQUEST_CODE = 10306;
-
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= 23) {
             //此处做动态权限申请
