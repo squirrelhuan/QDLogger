@@ -15,7 +15,6 @@ import static cn.demomaster.qdlogger_library.QDLogger.logDateFormat;
 public class LogFormat {
 
     SimpleDateFormat simpleDateFormat;
-
     public LogFormat(SimpleDateFormat simpleDateFormat) {
         this.simpleDateFormat = simpleDateFormat;
     }
