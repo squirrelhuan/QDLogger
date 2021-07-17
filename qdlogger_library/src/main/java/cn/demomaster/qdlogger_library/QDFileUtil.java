@@ -9,7 +9,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Environment;
 import android.os.storage.StorageManager;
@@ -27,8 +26,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static cn.demomaster.qdlogger_library.QDLogger.TAG;
@@ -94,7 +93,7 @@ public class QDFileUtil {
      * @throws IOException
      */
     public static void writeFileSdcardFile(String dirPath, String fileName,
-                                           String write_str, boolean append) throws IOException {
+                                           String write_str, boolean append){
         //Environment.getExternalStorageDirectory(),
         File file = new File(dirPath + File.separator + fileName);
         writeFileSdcardFile(file,write_str,append);
@@ -133,14 +132,14 @@ public class QDFileUtil {
     }
 
     // 读SD中的文件
-    public static String readFileSdcardFile(String fileName) throws IOException {
+    public static String readFileSdcardFile(String fileName){
         String res = null;
         try {
             FileInputStream fin = new FileInputStream(fileName);
             int length = fin.available();
             byte[] buffer = new byte[length];
             fin.read(buffer);
-            res = new String(buffer, "UTF-8");
+            res = new String(buffer, StandardCharsets.UTF_8);
             //res = EncodingUtils.getString(buffer, "UTF-8");
             fin.close();
         } catch (Exception e) {
@@ -174,7 +173,7 @@ public class QDFileUtil {
             is.close();
 
             // Convert the buffer into a string.
-            text = new String(buffer, "UTF-8");
+            text = new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException e) {
             QDLogger.e(e);
         }
@@ -516,7 +515,7 @@ public class QDFileUtil {
      * @throws IOException
      */
     public static void writeFileSdcardFile(String filePath, String fileName,
-                                           String write_str) throws IOException {
+                                           String write_str) {
         try {
             File dir = new File(filePath);
             if (!dir.exists()) {
@@ -536,7 +535,7 @@ public class QDFileUtil {
 
     /***************************************************************/
     /**
-     * 根据URI获取文件真实路径（兼容多张机型）
+     * 根据URI获取文件真实路径（兼容多种机型）
      *
      * @param context
      * @param uri

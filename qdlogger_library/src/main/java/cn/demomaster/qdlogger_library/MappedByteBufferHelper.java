@@ -1,8 +1,5 @@
 package cn.demomaster.qdlogger_library;
 
-import android.os.Environment;
-import android.util.Log;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,12 +33,13 @@ public class MappedByteBufferHelper {
             //FileChannel channel = FileChannel.open(Paths.get("src/c.txt"),StandardOpenOption.READ, StandardOpenOption.WRITE);) {
             return map(file, randomAccessFile, position, size);
         } catch (Exception ex) {
-            ex.printStackTrace();
             if(ex instanceof FileNotFoundException){
                 if(!file.exists()){
                     QDFileUtil.createFile(file);
+                    return null;
                 }
             }
+            ex.printStackTrace();
         }
         return null;
     }
