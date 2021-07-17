@@ -27,7 +27,6 @@ public class QDLogger {
     public static boolean enable = true;//是否启用
     public static String TAG = "QDLogger";
     private static Context mContext;
-
     //缓存阀值
     private static int bufferMaxSize = 10 * 1024;
     private static StringBuffer logBuffer;
