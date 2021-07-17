@@ -39,7 +39,6 @@ public class QDLogger {
     }
 
     static int writerMode = 0;//写入模式
-
     public static void setWriterMode(int writerMode) {
         QDLogger.writerMode = writerMode;
     }
