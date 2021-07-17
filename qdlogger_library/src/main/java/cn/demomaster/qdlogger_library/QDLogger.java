@@ -33,7 +33,6 @@ public class QDLogger {
     private static StringBuffer logBuffer;
     static LoggerWriter loggerWriter;
     static boolean fouceUseExternalStorage = false;//强制使用存储文件夹
-
     public static void setFouceUseExternalStorage(boolean fouceUseExternalStorage) {
         QDLogger.fouceUseExternalStorage = fouceUseExternalStorage;
     }
