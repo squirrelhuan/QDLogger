@@ -30,7 +30,7 @@ public class Table {
     public void addItem(TableItem tableItem) {
         for (Map.Entry entry : tableItem.getFieldMap().entrySet()) {
             if (entry.getKey() != null) {
-                int c = Math.max(getValueString(entry.getValue()).length(),((String)entry.getKey()).length());
+                int c = Math.max(getValueString(entry.getValue()).length(), ((String) entry.getKey()).length());
                 String title = (String) entry.getKey();
                 if (!titlesMap.containsKey(title)) {
                     titlesMap.put(title, c);
@@ -78,9 +78,9 @@ public class Table {
             String title = (String) entry.getKey();
             int maxValue = (int) entry.getValue();
             if (i < titlesMap.size() - 1) {
-                stringBuffer.append(String.format("%-"+maxValue+"s\t",title));
+                stringBuffer.append(String.format("%-" + maxValue + "s\t", title));
             } else {
-                stringBuffer.append(String.format("%-"+maxValue+"s\n",title));
+                stringBuffer.append(String.format("%-" + maxValue + "s\n", title));
             }
             i++;
         }
@@ -92,9 +92,9 @@ public class Table {
                 String value = getValueString(entry.getValue());
                 int maxValue = titlesMap.get(entry.getKey());
                 if (j < fieldMap.size() - 1) {
-                    stringBuffer.append(String.format("%-"+maxValue+"s\t",value));
+                    stringBuffer.append(String.format("%-" + maxValue + "s\t", value));
                 } else {
-                    stringBuffer.append(String.format("%-"+maxValue+"s\n",value));
+                    stringBuffer.append(String.format("%-" + maxValue + "s\n", value));
                 }
                 j++;
             }

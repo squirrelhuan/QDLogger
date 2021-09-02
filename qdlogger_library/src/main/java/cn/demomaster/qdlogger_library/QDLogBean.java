@@ -1,6 +1,7 @@
 package cn.demomaster.qdlogger_library;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 public class QDLogBean {
     private QDLoggerType type;//日志级别
@@ -46,6 +47,16 @@ public class QDLogBean {
         if (message instanceof Throwable) {
             this.throwable = (Throwable) message;
         }
+        initStackTrace();
+    }
+
+    private void initStackTrace() {
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        if (stackTraceElements.length >= 7) {
+            setLineNumber(stackTraceElements[6].getLineNumber());
+            setClazzFileName(stackTraceElements[6].getFileName());
+            //qdLogBean.setClazzFile(getClazzSimpleName(stackTraceElements[5].getClassName()));
+        }
     }
 
     public Throwable getThrowable() {
@@ -54,6 +65,9 @@ public class QDLogBean {
 
     public void setThrowable(Throwable throwable) {
         this.throwable = throwable;
+        if (throwable == message) {
+            message = "";
+        }
     }
 
     public QDLoggerType getType() {
@@ -96,21 +110,26 @@ public class QDLogBean {
         this.stackTraceElements = stackTraceElements;
     }
 
+    public String getThrowableInfo() {
+        return String.format("\n%s", Log.getStackTraceString(throwable));
+    }
+
     public String getStackInfo() {
         //String fileName = Thread.currentThread().getStackTrace()[index].getFileName(); //文件名
             /*className = Thread.currentThread().getStackTrace()[index].getClassName();
             methodName = Thread.currentThread().getStackTrace()[index].getMethodName();//函数名
             lineNumber = Thread.currentThread().getStackTrace()[index].getLineNumber(); //行号*/
-        String str = "";
+        StringBuilder stringBuilder = new StringBuilder();
         if (stackTraceElements != null) {
-            str += String.format("\n%s", getThrowable());
+            stringBuilder.append("\nStackInfo:");
             for (StackTraceElement stackTraceElement : stackTraceElements) {
-                str += "\n" + String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber());
+                stringBuilder.append("\n")
+                        .append(String.format("\tat %s:%s", stackTraceElement.getClassName(), stackTraceElement.getLineNumber()));
             }
         }
-        return str;
+        return stringBuilder.toString();
     }
-    
+
     public int getLogLineNumber(StackTraceElement[] stackTraceElements, String className) {
         if (!TextUtils.isEmpty(className) && stackTraceElements != null && stackTraceElements.length > 1) {
             for (StackTraceElement stackTraceElement : stackTraceElements) {
@@ -123,10 +142,8 @@ public class QDLogBean {
         return 0;
     }
 
-    /*public String generateMessageString() {
-        return generateMessageString(null);
-    }*/
     String mHeaderStr;
+
     public String generateHeader123() {
         /*if (TextUtils.isEmpty(mHeaderStr)) {
             Thread thread = Thread.currentThread();
@@ -151,11 +168,10 @@ public class QDLogBean {
     }
 
     public String generateBody() {
-        if (getThrowable() != null) {//错误日志
-            return getStackInfo();
-        } else {
-            return getMessage() + "";
+        if (throwable != null) {//错误日志
+            return getMessage() + getThrowableInfo();
         }
+        return getMessage() + "";
     }
 
    /* public boolean isShowThreadInfo() {

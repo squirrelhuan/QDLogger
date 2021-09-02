@@ -33,8 +33,8 @@ public class MappedByteBufferHelper {
             //FileChannel channel = FileChannel.open(Paths.get("src/c.txt"),StandardOpenOption.READ, StandardOpenOption.WRITE);) {
             return map(file, randomAccessFile, position, size);
         } catch (Exception ex) {
-            if(ex instanceof FileNotFoundException){
-                if(!file.exists()){
+            if (ex instanceof FileNotFoundException) {
+                if (!file.exists()) {
                     QDFileUtil.createFile(file);
                     return null;
                 }
@@ -73,7 +73,7 @@ public class MappedByteBufferHelper {
         //Log.e("cgq","delNulAtLastLine");
         try {
             file = new RandomAccessFile(fileName, "rw");
-            if (file != null&&file.length()>0) {
+            if (file != null && file.length() > 0) {
                 long len = file.length();
                 long start = file.getFilePointer();
                 long nextend = start + len - 1;
@@ -81,13 +81,12 @@ public class MappedByteBufferHelper {
                 // 移动指针
                 file.seek(nextend);
                 byte[] buf = new byte[1];
-                W:
                 while (nextend > start) {
                     i = file.read(buf, 0, 1);
                     if (buf[0] == 0) {
                         file.setLength(nextend - start);
                     } else {
-                        break W;
+                        break;
                     }
                     nextend--;
                     file.seek(nextend);
@@ -95,7 +94,7 @@ public class MappedByteBufferHelper {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if(e instanceof FileNotFoundException){
+            if (e instanceof FileNotFoundException) {
                 File file2 = new File(fileName);
                 if (!file2.exists()) {
                     createFile(file2);
@@ -112,6 +111,9 @@ public class MappedByteBufferHelper {
         }
     }
 
+    /**
+     * 日志緩存
+     */
     public static class MyMappedByteBuffer {
         MappedByteBuffer byteBuffer;
         RandomAccessFile randomAccessFile;

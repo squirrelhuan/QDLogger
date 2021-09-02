@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,31 +35,6 @@ import static cn.demomaster.qdlogger_library.QDLogger.TAG;
 
 public class QDFileUtil {
 
-    private static final String FOLDER_NAME = "gxj";
-
-    /**
-     * 初始化保存路径
-     * @return
-     */
-    private static String makeAppPath() {
-        String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + FOLDER_NAME;
-        File f = new File(storagePath);
-        if (!f.exists()) {
-            f.mkdir();
-        }
-        return storagePath;
-    }
-
-    /**
-     * 保存Bitmap到sdcard
-     * @param b 得到的图片
-     */
-    public static String saveBitmap(Bitmap b) {
-        String path = makeAppPath();
-        long dataTake = System.currentTimeMillis();
-        String imgPath = path + "/" + dataTake + ".jpg";
-        return QDFileUtil.saveBitmap(b, imgPath);
-    }
 
     /**
      * 根据图片文件路径获取bitmap
@@ -88,21 +64,24 @@ public class QDFileUtil {
 
     /**
      * 写数据到SD中的文件
+     *
      * @param fileName
      * @param write_str
      * @throws IOException
      */
     public static void writeFileSdcardFile(String dirPath, String fileName,
-                                           String write_str, boolean append){
+                                           String write_str, boolean append) {
         //Environment.getExternalStorageDirectory(),
         File file = new File(dirPath + File.separator + fileName);
-        writeFileSdcardFile(file,write_str,append);
+        writeFileSdcardFile(file, write_str, append);
     }
+
     public static void writeFileSdcardFile(String fileName,
                                            String write_str, boolean append) {
         File file = new File(fileName);
-        writeFileSdcardFile(file,write_str,append);
+        writeFileSdcardFile(file, write_str, append);
     }
+
     public static void writeFileSdcardFile(File file,
                                            String write_str, boolean append) {
         FileOutputStream fout = null;
@@ -119,7 +98,33 @@ public class QDFileUtil {
                 fout.close();
             }
         } catch (Exception e) {
-            Log.e(TAG,e.toString());
+            Log.e(TAG, e.toString());
+        } finally {
+            if (fout != null) {
+                try {
+                    fout.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void writeFileSdcardFile(File file,
+                                           byte[] bytes, boolean append) {
+        FileOutputStream fout = null;
+        try {
+            if (!file.exists()) {
+                createFile(file);
+            }
+            if (file.exists()) {
+                fout = new FileOutputStream(file, append);
+                fout.write(bytes);
+                fout.flush();
+                fout.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
         } finally {
             if (fout != null) {
                 try {
@@ -132,14 +137,14 @@ public class QDFileUtil {
     }
 
     // 读SD中的文件
-    public static String readFileSdcardFile(String fileName){
+    public static String readFileSdcardFile(String fileName) {
         String res = null;
         try {
             FileInputStream fin = new FileInputStream(fileName);
             int length = fin.available();
             byte[] buffer = new byte[length];
             fin.read(buffer);
-            res = new String(buffer, StandardCharsets.UTF_8);
+            res = new String(buffer, Charset.forName("UTF-8"));
             //res = EncodingUtils.getString(buffer, "UTF-8");
             fin.close();
         } catch (Exception e) {
@@ -156,7 +161,7 @@ public class QDFileUtil {
                 file.mkdir();
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -173,7 +178,7 @@ public class QDFileUtil {
             is.close();
 
             // Convert the buffer into a string.
-            text = new String(buffer, StandardCharsets.UTF_8);
+            text = new String(buffer, Charset.forName("UTF-8"));
         } catch (IOException e) {
             QDLogger.e(e);
         }
@@ -251,7 +256,7 @@ public class QDFileUtil {
             // 删除子目录
             else if (file.isDirectory()) {
                 flag = deleteDirectory(file.getAbsolutePath());
-                if (!flag)break;
+                if (!flag) break;
             }
         }
         if (!flag) {
@@ -313,9 +318,14 @@ public class QDFileUtil {
             if (path != null) {
                 path = Uri.decode(path);
                 ContentResolver cr = context.getContentResolver();
-                StringBuffer buff = new StringBuffer();
-                buff.append("(").append(MediaStore.Images.ImageColumns.DATA).append("=").append("'" + path + "'").append(")");
-                Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.DATA}, buff.toString(), null, null);
+                String buff = "(" +
+                        MediaStore.Images.ImageColumns.DATA +
+                        "=" +
+                        "'" +
+                        path +
+                        "'" +
+                        ")";
+                Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.DATA}, buff, null, null);
                 int index = 0;
                 int dataIdx = 0;
                 for (cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext()) {
@@ -371,67 +381,35 @@ public class QDFileUtil {
         }
     }
 
-    public static boolean existsFile(String path){
+    public static boolean existsFile(String path) {
         File file = new File(path);
         return file.exists();
     }
+
     public static String createFile(File file) {
         try {
             if (!file.exists()) {
                 //创建目录之后再创建文件
                 createDir(file.getParentFile().getAbsolutePath());
 
-                Log.d(TAG,"创建文件:" + file.getAbsolutePath());
+                Log.d(TAG, "创建文件:" + file.getAbsolutePath());
                 if (file.getParentFile().exists()) {
                     file.createNewFile();
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG,e.toString());
+            Log.e(TAG, e.toString());
         }
         return file.getAbsolutePath();
     }
 
     public static String createDir(String dirPath) {
         File file = new File(dirPath);
-        if(!file.exists()) {
-            Log.d(TAG,"创建文件夹:" + file.getAbsolutePath());
+        if (!file.exists()) {
+            Log.d(TAG, "创建文件夹:" + file.getAbsolutePath());
             file.mkdirs();
         }
         return dirPath;
-    }
-
-    /**
-     * 通过反射调用获取内置存储和外置sd卡根路径(通用)
-     *
-     * @param mContext    上下文
-     * @param is_removale 是否可移除，false返回内部存储路径，true返回外置SD卡路径
-     * @return
-     */
-    public static String getStoragePath(Context mContext, boolean is_removale) {
-        String path = "";
-        //使用getSystemService(String)检索一个StorageManager用于访问系统存储功能。
-        StorageManager mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
-        Class<?> storageVolumeClazz = null;
-        try {
-            storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
-            Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
-            Method getPath = storageVolumeClazz.getMethod("getPath");
-            Method isRemovable = storageVolumeClazz.getMethod("isRemovable");
-            Object result = getVolumeList.invoke(mStorageManager);
-
-            for (int i = 0; i < Array.getLength(result); i++) {
-                Object storageVolumeElement = Array.get(result, i);
-                path = (String) getPath.invoke(storageVolumeElement);
-                boolean removable = (Boolean) isRemovable.invoke(storageVolumeElement);
-                if (is_removale == removable) {
-                    //return path;
-                }
-            }
-        } catch (Exception e) {
-            QDLogger.e(e);
-        }
-        return path;
     }
 
     /**
@@ -449,7 +427,7 @@ public class QDFileUtil {
      * @return 所有可用于存储的不同的卡的位置，用一个List来保存
      */
     public static List<String> getExtSDCardPathList() {
-        List<String> paths = new ArrayList<String>();
+        List<String> paths = new ArrayList<>();
         String extFileStatus = Environment.getExternalStorageState();
         File extFile = Environment.getExternalStorageDirectory();
         //首先判断一下外置SD卡的状态，处于挂载状态才能获取的到
@@ -533,7 +511,6 @@ public class QDFileUtil {
         }
     }
 
-    /***************************************************************/
     /**
      * 根据URI获取文件真实路径（兼容多种机型）
      *
