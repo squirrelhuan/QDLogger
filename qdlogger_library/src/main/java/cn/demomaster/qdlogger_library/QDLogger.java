@@ -319,6 +319,17 @@ public class QDLogger {
                 Log.e(TAG, "未配置日志目录");
             }
         }
+
+        //destory
+        if(qdLogBean!=null) {
+            qdLogBean.setStackTraceElements(null);
+            qdLogBean.setThrowable(null);
+            qdLogBean.setMessage(null);
+            qdLogBean.setTag(null);
+            qdLogBean.setType(null);
+            qdLogBean.setClazzFileName(null);
+            qdLogBean =null;
+        }
     }
 
     static boolean hasDealPermissionError = true;

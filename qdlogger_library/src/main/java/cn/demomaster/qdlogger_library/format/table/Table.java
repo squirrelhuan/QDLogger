@@ -102,4 +102,10 @@ public class Table {
 
         return stringBuffer.toString();
     }
+
+    public void clear(){
+        if(items!=null){
+            items.clear();
+        }
+    }
 }

@@ -66,6 +66,7 @@ public class LogFormat {
         return msg;
     }
 
+    static MapKeyComparator mapKeyComparator;
     /**
      * 使用 Map按key进行排序
      *
@@ -76,8 +77,10 @@ public class LogFormat {
         if (map == null || map.isEmpty()) {
             return null;
         }
-        Map<Integer, String> sortMap = new TreeMap<>(
-                new MapKeyComparator());
+        if(mapKeyComparator==null){
+            mapKeyComparator = new MapKeyComparator();
+        }
+        Map<Integer, String> sortMap = new TreeMap<>(mapKeyComparator);
         sortMap.putAll(map);
         return sortMap;
     }

@@ -78,8 +78,7 @@ public class QDFileUtil {
 
     public static void writeFileSdcardFile(String fileName,
                                            String write_str, boolean append) {
-        File file = new File(fileName);
-        writeFileSdcardFile(file, write_str, append);
+        writeFileSdcardFile(new File(fileName), write_str, append);
     }
 
     public static void writeFileSdcardFile(File file,
@@ -92,7 +91,6 @@ public class QDFileUtil {
             if (file.exists()) {
                 fout = new FileOutputStream(file, append);
                 byte[] bytes = write_str.getBytes();
-
                 fout.write(bytes);
                 fout.flush();
                 fout.close();
