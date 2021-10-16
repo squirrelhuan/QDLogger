@@ -4,13 +4,14 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -23,9 +24,9 @@ import java.util.TimeZone;
 /**
  * 日志打印帮助类
  */
-public class QDLogger {
+public class QDLogger{
     private static boolean enable = true;//是否启用
-    public static String TAG = "QDLogger";
+    public static String TAG = QDLogger.class.getSimpleName();
     private static Context mContext;
     //缓存阀值
     private static int bufferMaxSize = 10 * 1024;
@@ -36,7 +37,6 @@ public class QDLogger {
 
     /**
      * 强制使用外置存储 （针对Android Q以上的版本）
-     *
      * @param fouceUseExternalStorage
      */
     public static void setFouceUseExternalStorage(boolean fouceUseExternalStorage) {
@@ -66,7 +66,6 @@ public class QDLogger {
 
     static LogFormat logFormat;
     static final String log_header_ = "\n[QDLogger Start]";
-
     public static void init(Context context, String logFilePath) {
         mContext = context.getApplicationContext();
         logFormat = new LogFormat(logDateFormat);
@@ -302,7 +301,7 @@ public class QDLogger {
                             logBuffer.delete(0, sb_length);    //删除字符串从0~sb_length-1处的内容 (这个方法就是用来清除StringBuffer中的内容的)
                             //loggerWriter.writeLog(logFilePath, logBuffer);
                         }
-                        loggerWriter.writeLog(logFilePath, text);
+                        loggerWriter.writeLog(logFilePath, text.getBytes());
                     } else {
                         //添加到缓存，但是缓存有大小限制，超过缓存大小，清除之前的缓存
                         int ds = logBuffer.length() - bufferMaxSize;
@@ -325,10 +324,10 @@ public class QDLogger {
             qdLogBean.setStackTraceElements(null);
             qdLogBean.setThrowable(null);
             qdLogBean.setMessage(null);
+            qdLogBean.setClazzFileName(null);
+            qdLogBean.setClazzName1(null);
             qdLogBean.setTag(null);
             qdLogBean.setType(null);
-            qdLogBean.setClazzFileName(null);
-            qdLogBean =null;
         }
     }
 
@@ -391,6 +390,9 @@ public class QDLogger {
 
     public static void setLogPath(String dirPath) {
         logFilePath = dirPath;
+        if(TextUtils.isEmpty(logFilePath)){
+            return;
+        }
 
         File file;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
@@ -436,36 +438,10 @@ public class QDLogger {
         }
     }
 
-    static int[] tagColors = new int[]{Color.WHITE, Color.BLUE, Color.GREEN, Color.YELLOW, Color.RED, Color.RED, Color.DKGRAY};
-
-    public static int getColor(int logType) {
-        int color = tagColors[1];
-        switch (logType) {
-            case Log.VERBOSE:// 2;
-                color = tagColors[0];
-                break;
-            case Log.DEBUG:// 3;
-                color = tagColors[6];
-                break;
-            case Log.INFO:// 4;
-            case -2:// 6;
-                color = tagColors[2];
-                break;
-            case Log.WARN:// 5;
-                color = tagColors[3];
-                break;
-            case Log.ERROR:// 6;
-                color = tagColors[4];
-                break;
-        }
-        return color;
-    }
-
     static QDLogInterceptor mLogInterceptor;
 
     /**
      * 日志拦截器
-     *
      * @param logInterceptor
      */
     public static void setInterceptor(QDLogInterceptor logInterceptor) {
@@ -481,15 +457,18 @@ public class QDLogger {
             if (data instanceof Map) {
                 Map<Object, Object> map = (Map) data;
                 for (Map.Entry entry : map.entrySet()) {
+                    String v = (entry.getValue()+"").trim();
                     stringBuilder.append(entry.getKey())
                             .append("=")
-                            .append(entry.getValue())
-                            .append("\n\r");
+                            .append(v);
+                    if(!TextUtils.isEmpty(v)&&(!(v.endsWith("\n\r")&&!v.endsWith("\n")))){
+                        stringBuilder.append("\n\r");
+                    }
                 }
                 stringBuilder.append(tag2);
                 QDLogger.i(stringBuilder.toString());
             } else if (data instanceof Array) {
-              /*  Array map = (Array) data;
+              /* Array map = (Array) data;
                 for (Object entry : map) {
                     logStr = logStr + entry+"\n\r" ;
                 }
@@ -505,7 +484,7 @@ public class QDLogger {
         }
         return isDebug(mContext);
     }
-
+    
     /**
      * 判断当前应用是否是debug状态
      */

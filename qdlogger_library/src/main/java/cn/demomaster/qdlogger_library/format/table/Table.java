@@ -44,14 +44,13 @@ public class Table {
         }
         items.add(tableItem);
     }
-
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");// HH:mm:s
     private String getValueString(Object value) {
         if (value == null) {
             return "";
         }
         String strValue = null;
         if (value instanceof Date) {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");// HH:mm:s
             strValue = simpleDateFormat.format((Date) value);
         } else {
             strValue = String.valueOf(value);
@@ -72,7 +71,7 @@ public class Table {
 
     @Override
     public String toString() {
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuffer = new StringBuilder();
         int i = 0;
         for (Map.Entry entry : titlesMap.entrySet()) {
             String title = (String) entry.getKey();
@@ -84,7 +83,7 @@ public class Table {
             }
             i++;
         }
-
+        
         for (TableItem item : items) {
             Map<String, Object> fieldMap = item.getFieldMap();
             int j = 0;
@@ -99,13 +98,16 @@ public class Table {
                 j++;
             }
         }
-
+        
         return stringBuffer.toString();
     }
 
     public void clear(){
         if(items!=null){
             items.clear();
+        }
+        if(titlesMap!=null){
+            titlesMap.clear();
         }
     }
 }

@@ -17,7 +17,7 @@ public class LogFormat {
     SimpleDateFormat simpleDateFormat;
 
     public LogFormat(SimpleDateFormat simpleDateFormat) {
-        this.simpleDateFormat = simpleDateFormat;
+       // this.simpleDateFormat = simpleDateFormat;
     }
 
     public String formatHeader(String formatStr, QDLogBean qdLogBean) {
@@ -53,6 +53,52 @@ public class LogFormat {
                     break;
                 case "thread":
                     newValue = "[" + qdLogBean.getThreadId() + "]";
+                    break;
+            }
+            if (TextUtils.isEmpty(newValue)) {
+                newValue = "";
+            }
+            if (msg.contains(val)) {
+                String[] strings = msg.split(val, 2);
+                msg = strings[0] + newValue + strings[1];
+            }
+        }
+        return msg;
+    }
+
+    public String formatHeader(String formatStr, String tag,String clazzFileName,int lineNum,long threadId) {
+        Map<Integer, String> valuesMap = new LinkedHashMap<>();
+        //先解析对应的标签
+        if (formatStr.contains("time")) {
+            valuesMap.put(formatStr.indexOf("time"), "time");
+        }
+        if (formatStr.contains("tag")) {
+            valuesMap.put(formatStr.indexOf("tag"), "tag");
+        }
+        if (formatStr.contains("class")) {
+            valuesMap.put(formatStr.indexOf("class"), "class");
+        }
+        if (formatStr.contains("thread")) {
+            valuesMap.put(formatStr.indexOf("thread"), "thread");
+        }
+        //再对已有标签替换内容
+        Map<Integer, String> valuesMap2 = sortMapByKey(valuesMap);
+        String msg = formatStr;
+        for (Map.Entry entry : valuesMap2.entrySet()) {
+            String val = (String) entry.getValue();
+            String newValue = "";
+            switch (val) {
+                case "tag":
+                    newValue = tag;
+                    break;
+                case "time":
+                    newValue = getDateTimeStr();
+                    break;
+                case "class":
+                    newValue = "(" + clazzFileName + ":" + lineNum + ")";
+                    break;
+                case "thread":
+                    newValue = "[" + threadId + "]";
                     break;
             }
             if (TextUtils.isEmpty(newValue)) {

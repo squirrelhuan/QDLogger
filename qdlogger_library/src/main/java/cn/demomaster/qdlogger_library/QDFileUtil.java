@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.storage.StorageManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -24,18 +23,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import static cn.demomaster.qdlogger_library.QDLogger.TAG;
 
 public class QDFileUtil {
-
-
+    
     /**
      * 根据图片文件路径获取bitmap
      *
@@ -73,39 +68,17 @@ public class QDFileUtil {
                                            String write_str, boolean append) {
         //Environment.getExternalStorageDirectory(),
         File file = new File(dirPath + File.separator + fileName);
-        writeFileSdcardFile(file, write_str, append);
+        writeFileSdcardFile(file, write_str.getBytes(), append);
     }
 
     public static void writeFileSdcardFile(String fileName,
-                                           String write_str, boolean append) {
-        writeFileSdcardFile(new File(fileName), write_str, append);
+                                           byte[] bytes, boolean append) {
+        writeFileSdcardFile(new File(fileName), bytes, append);
     }
 
     public static void writeFileSdcardFile(File file,
                                            String write_str, boolean append) {
-        FileOutputStream fout = null;
-        try {
-            if (!file.exists()) {
-                createFile(file);
-            }
-            if (file.exists()) {
-                fout = new FileOutputStream(file, append);
-                byte[] bytes = write_str.getBytes();
-                fout.write(bytes);
-                fout.flush();
-                fout.close();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.toString());
-        } finally {
-            if (fout != null) {
-                try {
-                    fout.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
+        writeFileSdcardFile(file,write_str.getBytes(),append);
     }
 
     public static void writeFileSdcardFile(File file,
@@ -433,11 +406,14 @@ public class QDFileUtil {
             //外置SD卡的路径
             paths.add(extFile.getAbsolutePath());
         }
+        Process process = null;
+        InputStream is = null;
+        InputStreamReader isr = null;
         try {
             Runtime runtime = Runtime.getRuntime();
-            Process process = runtime.exec("mount");
-            InputStream is = process.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
+            process = runtime.exec("mount");
+            is = process.getInputStream();
+            isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             String line = null;
             int mountPathIndex = 1;
@@ -478,6 +454,28 @@ public class QDFileUtil {
             }
         } catch (IOException e) {
             QDLogger.e(e);
+        }finally {
+            if(process!=null){
+                try {
+                    process.destroy();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            if(is!=null){
+                try {
+                    is.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            if(isr!=null){
+                try {
+                    isr.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
         }
         return paths;
     }
@@ -563,7 +561,7 @@ public class QDFileUtil {
 
                 filePath = getDataColumn(context, contentUri, selection, selectionArgs);
             } else if (isDownloadsDocument(uri)) { // DownloadsProvider
-                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(documentId));
+                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(documentId));
                 filePath = getDataColumn(context, contentUri, null, null);
             } else if (isExternalStorageDocument(uri)) {
                 // ExternalStorageProvider

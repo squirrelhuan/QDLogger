@@ -1,7 +1,5 @@
 package cn.demomaster.qdlogger_library;
 
-import android.text.TextUtils;
-
 import java.io.File;
 
 import static cn.demomaster.qdlogger_library.QDFileUtil.createFile;
@@ -19,7 +17,7 @@ public class MapBufferWriter implements LoggerWriter {
 
     //写入日志数据
     @Override
-    public void writeLog(String logFilePath, String logMsg) {
+    public void writeLog(String logFilePath, byte[] bytes) {
         //先判断文件是否存在，不存在则创建
         File file = new File(logFilePath);
         if (!file.exists()) {
@@ -34,7 +32,7 @@ public class MapBufferWriter implements LoggerWriter {
         }
 
         if (mapByteBuffer != null) {//确保映射成功，可以写入
-            mapByteBuffer.put(TextUtils.isEmpty(logMsg) ? "NUL".getBytes() : logMsg.getBytes());
+            mapByteBuffer.put(bytes==null ? "NUL".getBytes() : bytes);
         }
     }
 

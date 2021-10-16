@@ -39,7 +39,7 @@ public class QDLogBean {
     public void setClazzFileName(String clazzFileName) {
         this.clazzFileName = clazzFileName;
     }
-
+    
     public QDLogBean(QDLoggerType type, String tag, Object message) {
         this.type = type;
         this.message = message;
