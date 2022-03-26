@@ -1,4 +1,4 @@
-package cn.demomaster.qdlogger_library;
+package cn.demomaster.qdlogger_library.writer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,7 +9,9 @@ import java.nio.BufferOverflowException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-import static cn.demomaster.qdlogger_library.QDFileUtil.createFile;
+import cn.demomaster.qdlogger_library.util.QDFileUtil;
+
+import static cn.demomaster.qdlogger_library.util.QDFileUtil.createFile;
 
 public class MappedByteBufferHelper {
 

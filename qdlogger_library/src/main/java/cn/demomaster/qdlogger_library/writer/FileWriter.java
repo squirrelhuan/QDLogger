@@ -1,6 +1,6 @@
-package cn.demomaster.qdlogger_library;
+package cn.demomaster.qdlogger_library.writer;
 
-import static cn.demomaster.qdlogger_library.QDFileUtil.writeFileSdcardFile;
+import static cn.demomaster.qdlogger_library.util.QDFileUtil.writeFileSdcardFile;
 
 public class FileWriter implements LoggerWriter {
     @Override

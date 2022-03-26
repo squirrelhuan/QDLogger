@@ -1,10 +1,14 @@
-package cn.demomaster.qdlogger_library;
+package cn.demomaster.qdlogger_library.model;
 
 import android.text.TextUtils;
 import android.util.Log;
 
-public class QDLogBean {
-    private QDLoggerType type;//日志级别
+import java.io.Serializable;
+
+import cn.demomaster.qdlogger_library.constant.QDLogLevel;
+
+public class LogBean implements Serializable {
+    private QDLogLevel level;//日志级别
     private Object message;//内容
     private String tag;//tag标签
     private StackTraceElement[] stackTraceElements;//进程堆栈
@@ -40,8 +44,8 @@ public class QDLogBean {
         this.clazzFileName = clazzFileName;
     }
     
-    public QDLogBean(QDLoggerType type, String tag, Object message) {
-        this.type = type;
+    public LogBean(QDLogLevel level, String tag, Object message) {
+        this.level = level;
         this.message = message;
         this.tag = tag;
         if (message instanceof Throwable) {
@@ -70,12 +74,12 @@ public class QDLogBean {
         }
     }
 
-    public QDLoggerType getType() {
-        return type;
+    public QDLogLevel getLevel() {
+        return level;
     }
 
-    public void setType(QDLoggerType type) {
-        this.type = type;
+    public void setLevel(QDLogLevel level) {
+        this.level = level;
     }
 
     public Object getMessage() {
@@ -130,6 +134,12 @@ public class QDLogBean {
         return stringBuilder.toString();
     }
 
+    /**
+     * 获取行号
+     * @param stackTraceElements
+     * @param className
+     * @return
+     */
     public int getLogLineNumber(StackTraceElement[] stackTraceElements, String className) {
         if (!TextUtils.isEmpty(className) && stackTraceElements != null && stackTraceElements.length > 1) {
             for (StackTraceElement stackTraceElement : stackTraceElements) {

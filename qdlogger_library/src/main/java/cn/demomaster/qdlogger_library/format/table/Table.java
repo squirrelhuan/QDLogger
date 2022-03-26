@@ -98,7 +98,6 @@ public class Table {
                 j++;
             }
         }
-        
         return stringBuffer.toString();
     }
 

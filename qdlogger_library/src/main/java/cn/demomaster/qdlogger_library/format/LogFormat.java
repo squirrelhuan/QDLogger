@@ -1,4 +1,4 @@
-package cn.demomaster.qdlogger_library;
+package cn.demomaster.qdlogger_library.format;
 
 import android.text.TextUtils;
 
@@ -8,7 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import cn.demomaster.qdlogger_library.format.MapKeyComparator;
+import cn.demomaster.qdlogger_library.QDLogger;
+import cn.demomaster.qdlogger_library.constant.QDLogLevel;
+import cn.demomaster.qdlogger_library.model.LogBean;
 
 import static cn.demomaster.qdlogger_library.QDLogger.logDateFormat;
 
@@ -20,53 +22,11 @@ public class LogFormat {
        // this.simpleDateFormat = simpleDateFormat;
     }
 
-    public String formatHeader(String formatStr, QDLogBean qdLogBean) {
-        Map<Integer, String> valuesMap = new LinkedHashMap<>();
-        //先解析对应的标签
-        if (formatStr.contains("time")) {
-            valuesMap.put(formatStr.indexOf("time"), "time");
-        }
-        if (formatStr.contains("tag")) {
-            valuesMap.put(formatStr.indexOf("tag"), "tag");
-        }
-        if (formatStr.contains("class")) {
-            valuesMap.put(formatStr.indexOf("class"), "class");
-        }
-        if (formatStr.contains("thread")) {
-            valuesMap.put(formatStr.indexOf("thread"), "thread");
-        }
-        //再对已有标签替换内容
-        Map<Integer, String> valuesMap2 = sortMapByKey(valuesMap);
-        String msg = formatStr;
-        for (Map.Entry entry : valuesMap2.entrySet()) {
-            String val = (String) entry.getValue();
-            String newValue = "";
-            switch (val) {
-                case "tag":
-                    newValue = qdLogBean.getTag();
-                    break;
-                case "time":
-                    newValue = getDateTimeStr();
-                    break;
-                case "class":
-                    newValue = "(" + qdLogBean.getClazzFileName() + ":" + qdLogBean.getLineNumber() + ")";
-                    break;
-                case "thread":
-                    newValue = "[" + qdLogBean.getThreadId() + "]";
-                    break;
-            }
-            if (TextUtils.isEmpty(newValue)) {
-                newValue = "";
-            }
-            if (msg.contains(val)) {
-                String[] strings = msg.split(val, 2);
-                msg = strings[0] + newValue + strings[1];
-            }
-        }
-        return msg;
+    public String formatHeader(String formatStr, LogBean logBean) {
+        return formatHeader(formatStr, logBean.getTag(), logBean.getClazzFileName(), logBean.getLineNumber(),logBean.getLevel(), logBean.getThreadId());
     }
 
-    public String formatHeader(String formatStr, String tag,String clazzFileName,int lineNum,long threadId) {
+    public String formatHeader(String formatStr, String tag, String clazzFileName, int lineNum, QDLogLevel level, long threadId) {
         Map<Integer, String> valuesMap = new LinkedHashMap<>();
         //先解析对应的标签
         if (formatStr.contains("time")) {
@@ -77,6 +37,9 @@ public class LogFormat {
         }
         if (formatStr.contains("class")) {
             valuesMap.put(formatStr.indexOf("class"), "class");
+        }
+        if (formatStr.contains("level")) {
+            valuesMap.put(formatStr.indexOf("level"), "level");
         }
         if (formatStr.contains("thread")) {
             valuesMap.put(formatStr.indexOf("thread"), "thread");
@@ -97,6 +60,9 @@ public class LogFormat {
                 case "class":
                     newValue = "(" + clazzFileName + ":" + lineNum + ")";
                     break;
+                case "level":
+                    newValue = "" + level.name().substring(0,1);
+                    break;
                 case "thread":
                     newValue = "[" + threadId + "]";
                     break;
@@ -111,7 +77,7 @@ public class LogFormat {
         }
         return msg;
     }
-
+    
     static MapKeyComparator mapKeyComparator;
     /**
      * 使用 Map按key进行排序

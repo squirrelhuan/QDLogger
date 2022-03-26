@@ -1,8 +1,8 @@
-package cn.demomaster.qdlogger_library;
+package cn.demomaster.qdlogger_library.writer;
 
 import java.io.File;
 
-import static cn.demomaster.qdlogger_library.QDFileUtil.createFile;
+import static cn.demomaster.qdlogger_library.util.QDFileUtil.createFile;
 
 public class MapBufferWriter implements LoggerWriter {
 

@@ -6,190 +6,142 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
-import org.json.JSONObject;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import cn.demomaster.qdlogger_library.config.Config;
+import cn.demomaster.qdlogger_library.config.ConfigBuilder;
+import cn.demomaster.qdlogger_library.constant.QDLogLevel;
+import cn.demomaster.qdlogger_library.format.LogFormat;
+import cn.demomaster.qdlogger_library.format.StringFormat;
+import cn.demomaster.qdlogger_library.interceptor.QDLogInterceptor;
+import cn.demomaster.qdlogger_library.model.LogBean;
+import cn.demomaster.qdlogger_library.model.QDLogHeader;
+import cn.demomaster.qdlogger_library.util.QDFileUtil;
+import cn.demomaster.qdlogger_library.writer.FileWriter;
+import cn.demomaster.qdlogger_library.writer.LoggerWriter;
+import cn.demomaster.qdlogger_library.writer.MapBufferWriter;
+
 /**
  * 日志打印帮助类
  */
-public class QDLogger{
-    private static boolean enable = true;//是否启用
-    public static String TAG = QDLogger.class.getSimpleName();
+public class QDLogger {
+    public static String TAG = QDLogger.class.getSimpleName();//默认标签
     private static Context mContext;
-    //缓存阀值
-    private static int bufferMaxSize = 10 * 1024;
-    private static StringBuffer logBuffer;
+    private static StringBuffer logStringBuffer;
     static LoggerWriter loggerWriter;
-    static boolean fouceUseExternalStorage = false;//强制使用外置存储 针对Android Q以上的版本，但是需要 MANAGE_EXTERNAL_STORAGE
-    static boolean fouceUseExternalStorage2 = true;//使用外置存储 Android Q以下
+    static Config mConfig;
+    static LogFormat logFormat;
+    static QDLogHeader qdLogHeader;
 
-    /**
-     * 强制使用外置存储 （针对Android Q以上的版本）
-     * @param fouceUseExternalStorage
-     */
-    public static void setFouceUseExternalStorage(boolean fouceUseExternalStorage) {
-        QDLogger.fouceUseExternalStorage = fouceUseExternalStorage;
-        setLogPath(logFilePath);
-    }
-
-    /**
-     * 强制使用外置存储 （针对Android Q及其以下的版本）
-     *
-     * @param fouceUseExternalStorage2
-     */
-    public static void setFouceUseExternalStorage2(boolean fouceUseExternalStorage2) {
-        QDLogger.fouceUseExternalStorage2 = fouceUseExternalStorage2;
-        setLogPath(logFilePath);
-    }
-
-    static int writerMode = 1;//写入模式
-    public static void setWriterMode(int writerMode) {
-        QDLogger.writerMode = writerMode;
-        if (writerMode == 0) {//mapbuffer写入
+    public static void init(Context context, Config config) {
+        mContext = context.getApplicationContext();
+        logFormat = new LogFormat(logDateFormat);
+        mConfig = config;
+        if (mConfig == null) {
+            ConfigBuilder builder = new ConfigBuilder(context);
+            mConfig = builder.build();
+        }
+        mConfig.getLogSavePath(); //setLogPath(mConfig.logFileRelativePath);
+        String log_header_ = "# QDLogger Start " +
+                "\n# 版本名称："+ QDFileUtil.getVersionName(mContext)
+                +"\n# 版本号："+QDFileUtil.getVersionCode(mContext)+"\n";
+        List<String> stringList = new ArrayList<>();
+        stringList.add("QDLogger V1.0.1");
+        stringList.add("日期："+simpleDateFormat.format(new Date()));
+        stringList.add("包名："+ mContext.getPackageName());
+        stringList.add("版本名称："+ QDFileUtil.getVersionName(mContext));
+        stringList.add("版本号："+QDFileUtil.getVersionCode(mContext));
+        log_header_ = StringFormat.format(stringList);
+        //log_header_ = qdLogHeader.toString()+"\n";
+        if (logStringBuffer == null) {//設置打印頭
+            logStringBuffer = new StringBuffer();
+            logStringBuffer.append(log_header_);
+        }
+        if (mConfig.writerMode == 0) {//mapbuffer写入
             loggerWriter = new MapBufferWriter();
         } else {//普通文件写入
             loggerWriter = new FileWriter();
         }
     }
 
-    static LogFormat logFormat;
-    static final String log_header_ = "\n[QDLogger Start]";
-    public static void init(Context context, String logFilePath) {
-        mContext = context.getApplicationContext();
-        logFormat = new LogFormat(logDateFormat);
-        setLogPath(logFilePath);
-        if (logBuffer == null) {//設置打印頭
-            logBuffer = new StringBuffer();
-            logBuffer.append(log_header_);
-        }
-        setWriterMode(writerMode);
-    }
-
-    public static void setEnable(boolean enable) {
-        QDLogger.enable = enable;
-    }
-
-    public static void setTAG(String tag) {
-        TAG = tag;
-    }
-
-    /**********  i ***********/
+    //#通过根日志记录器指定日志级别及输出源
+//#日志输出的优先级：  debug < info < warn < error
     public static void i(Object obj) {
-        log_i(TAG, obj);
+        doLog(QDLogLevel.INFO, mConfig.TAG, obj, null);
     }
 
     public static void i(String tag, Object obj) {
-        log_i(tag, obj);
+        doLog(QDLogLevel.INFO, tag, obj, null);
     }
 
-    private static void log_i(String tag, Object obj) {
-        QDLogBean qdLogBean = new QDLogBean(QDLoggerType.INFO, tag, obj);
-        doLog(qdLogBean);
-    }
-
-    /**********  d ***********/
     public static void d(String tag, Object obj) {
-        log_d(null, tag, obj);
+        doLog(QDLogLevel.DEBUG, tag, obj, null);
     }
 
     public static void d(Object obj) {
-        log_d(null, TAG, obj);
+        doLog(QDLogLevel.DEBUG, mConfig.TAG, obj, null);
     }
 
-    public static void d(Class clazz, Object obj) {
-        log_d(clazz, TAG, obj);
-    }
-
-    private static void log_d(Class clazz, String tag, Object obj) {
-        QDLogBean qdLogBean = new QDLogBean(QDLoggerType.DEBUG, tag, obj);
-        doLog(qdLogBean);
-    }
-
-    /**********  e ***********/
     public static void e(String tag, Object obj) {
-        if (obj instanceof Throwable) {
-            log_e(tag, obj, (Throwable) obj);
-        } else {
-            log_e(tag, obj, null);
-        }
+        doLog(QDLogLevel.ERROR, tag, obj, null);
     }
 
     public static void e(String tag, Object obj, Throwable tr) {
-        log_e(tag, obj, tr);
+        doLog(QDLogLevel.ERROR, tag, obj, tr);
     }
 
     public static void e(Object obj) {
-        if (obj instanceof Throwable) {
-            log_e(TAG, obj, (Throwable) obj);
-        } else {
-            log_e(TAG, obj, null);
-        }
+        doLog(QDLogLevel.ERROR, mConfig.TAG, obj, null);
     }
 
-    private static void log_e(String tag, Object obj, Throwable tr) {
-        QDLogBean qdLogBean = new QDLogBean(QDLoggerType.ERROR, tag, obj);
-        qdLogBean.setThrowable(tr);
-        doLog(qdLogBean);
-    }
-
-    /**********  v ***********/
     public static void v(String tag, Object obj) {
-        log_v(tag, obj);
+        doLog(QDLogLevel.VERBOSE, tag, obj, null);
     }
 
     public static void v(Object obj) {
-        log_v(TAG, obj);
+        doLog(QDLogLevel.VERBOSE, mConfig.TAG, obj, null);
     }
 
-    private static void log_v(String tag, Object obj) {
-        QDLogBean qdLogBean = new QDLogBean(QDLoggerType.VERBOSE, tag, obj);
-        doLog(qdLogBean);
-    }
-
-    /**********  w ***********/
     public static void w(String tag, Object obj) {
-        log_w(tag, obj);
+        doLog(QDLogLevel.WARN, tag, obj, null);
     }
 
     public static void w(Object obj) {
-        log_w(TAG, obj);
-    }
-
-    private static void log_w(String tag, Object obj) {
-        QDLogBean qdLogBean = new QDLogBean(QDLoggerType.WARN, TAG, obj);
-        doLog(qdLogBean);
+        doLog(QDLogLevel.WARN, mConfig.TAG, obj, null);
     }
 
     public static void println(Object message) {
-        printlndo(TAG, message);
+        doLog(QDLogLevel.PRINTLN, mConfig.TAG, message, null);
     }
 
     public static void println(String tag, Object message) {
-        printlndo(tag, message);
+        doLog(QDLogLevel.PRINTLN, tag, message, null);
     }
 
-    private static void printlndo(String tag, Object obj) {
-        QDLogBean qdLogBean = new QDLogBean(QDLoggerType.PRINTLN, tag, obj);
-        doLog(qdLogBean);
+    public static void setEnable(boolean enable) {
+        if (mConfig != null) {
+            mConfig.enable = enable;
+        }
     }
 
-    public void setHeaderFormat(String formatStr) {
-        headerFormat = formatStr;
-    }
-
-    public static String headerFormat = "time-class-thread:";//正则表达式,处理头文件 tag日志标签 class所在类信息 time打印时间 thread打印进程信息 "tag-class-time-thread:";
     public static String headerFormat2 = "time:";//正则表达式,处理头文件 tag日志标签 class所在类信息 time打印时间 thread打印进程信息
     public static String headerFormat3 = "class:";//正则表达式,处理头文件 tag日志标签 class所在类信息 time打印时间 thread打印进程信息
     public static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss", Locale.CHINA);
@@ -213,10 +165,8 @@ public class QDLogger{
         simpleDateFormat2.setTimeZone(timeZone);
     }
 
-    static QDLogBean lastQDLogBean;//上一次输出的文本
+    static LogBean lastLogBean;//上一次输出的文本
     static boolean sampleModel;
-    static boolean usingGraphics = true;//启用图形化
-
     private static final char TOP_LEFT_CORNER = '┌';
     private static final char BOTTOM_LEFT_CORNER = '└';
     private static final char MIDDLE_CORNER = '├';
@@ -226,109 +176,141 @@ public class QDLogger{
     private static final String SINGLE_DIVIDER = "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄";
     private static final String SINGLE_DIVIDER2 = "╚═══════════════════════════════════════════════════════════════════════════════════════\n";
 
-    private static void doLog(QDLogBean qdLogBean) {
+    private static void doLog(QDLogLevel qdLogLevel, String tag, Object obj, Throwable tr) {
+        LogBean logBean = new LogBean(qdLogLevel, tag, obj);
+        if (obj instanceof Throwable) {
+            logBean.setThrowable((Throwable) obj);
+        }
+        if (tr != null) {
+            logBean.setThrowable(tr);
+        }
+        doLog(logBean);
+    }
+
+    private static void doLog(LogBean logBean) {
         if (mContext == null) {
-            Log.e(TAG, "[QDLogger]未初始化");
+            Log.e(mConfig.TAG, "[QDLogger]未初始化");
             return;
         }
 
-        String logStr1 = logFormat.formatHeader(headerFormat3, qdLogBean) + qdLogBean.generateBody();
+        String logStr1 = logFormat.formatHeader(headerFormat3, logBean) + logBean.generateBody();
         if (mLogInterceptor != null) {
-            mLogInterceptor.onLog(qdLogBean);
+            mLogInterceptor.onLog(logBean);
         }
         //正常打印日志
-        switch (qdLogBean.getType()) {
+        switch (logBean.getLevel()) {
             case VERBOSE:
-                Log.v(qdLogBean.getTag(), logStr1);
+                Log.v(logBean.getTag(), logStr1);
                 break;
             case INFO:
-                Log.i(qdLogBean.getTag(), logStr1);
+                Log.i(logBean.getTag(), logStr1);
                 break;
             case WARN:
-                Log.w(qdLogBean.getTag(), logStr1);
+                Log.w(logBean.getTag(), logStr1);
                 break;
             case DEBUG:
-                Log.d(qdLogBean.getTag(), logStr1);
+                Log.d(logBean.getTag(), logStr1);
                 break;
             case ERROR:
-                if (qdLogBean.getThrowable() != null && BuildConfig.DEBUG) {
-                    (qdLogBean.getThrowable()).printStackTrace();
+                if (logBean.getThrowable() != null && BuildConfig.DEBUG) {
+                    (logBean.getThrowable()).printStackTrace();
                 } else {
-                    Log.e(qdLogBean.getTag(), logStr1);
+                    Log.e(logBean.getTag(), logStr1);
                 }
                 break;
             case PRINTLN:
                 System.out.println(logStr1);
                 return;
         }
+        write(logBean);
+        //destory
+        logBean.setStackTraceElements(null);
+        logBean.setThrowable(null);
+        logBean.setMessage(null);
+        logBean.setClazzFileName(null);
+        logBean.setClazzName1(null);
+        logBean.setTag(null);
+        logBean.setLevel(null);
+    }
 
-        String logStr2 = "";
-        if (enable) {
+    private static void write(LogBean logBean) {
+        boolean useful = checkWritePermission(mContext);
+        if (!useful) {//检查该存储权限
+            logNoPermissionError();
+            return;
+        }
+        if (mConfig.enable) {//是否启用
             //如果配置了日志目录，则打印log到指定目录
-            if (!TextUtils.isEmpty(LOG_DIR_ABSOLUTEPATH)) {
-                // 检查该权限是否已经获取
-                boolean useful = checkWritePermission(mContext);// (checkPermissionStatus(mContext, permissions)&&checkPermissionStatus(mContext, permissions2));
-                if (useful) {
-                    String logFileName = simpleDateFormat2.format(new Date()) + ".txt";
-                    String logFilePath = LOG_DIR_ABSOLUTEPATH + logFileName;
-                    String headStr = "";
-                    if (lastQDLogBean == null
-                            || TextUtils.isEmpty(qdLogBean.getClazzFileName())
-                            || TextUtils.isEmpty(lastQDLogBean.getClazzFileName())
-                            || !qdLogBean.getClazzFileName().equals(lastQDLogBean.getClazzFileName())
-                            || qdLogBean.getLineNumber() != lastQDLogBean.getLineNumber()) {
-                        headStr = logFormat.formatHeader(headerFormat, qdLogBean);
-                        if (sampleModel && usingGraphics) {
-                            headStr = BOTTOM_LEFT_CORNER + DOUBLE_DIVIDER + "\n" + headStr;
-                            sampleModel = false;
-                        }
-                    } else {
-                        if (usingGraphics) {
-                            headStr = MIDDLE_CORNER + "";
-                            sampleModel = true;
-                        }
-                        headStr = headStr + logFormat.formatHeader(headerFormat2, qdLogBean);
-                    }
-                    lastQDLogBean = qdLogBean;
-                    logStr2 = headStr + qdLogBean.generateBody();
-                    logStr2 = logFormat.formatEnd(logStr2);
-
-                    if (canWriteAble) {
-                        String text = logStr2;
-                        if (logBuffer.length() > 0) {//先写入缓存数据
-                            text = logStr2 + "\n" + logBuffer.toString();
-                            int sb_length = logBuffer.length();// 取得字符串的长度
-                            logBuffer.delete(0, sb_length);    //删除字符串从0~sb_length-1处的内容 (这个方法就是用来清除StringBuffer中的内容的)
-                            //loggerWriter.writeLog(logFilePath, logBuffer);
-                        }
-                        loggerWriter.writeLog(logFilePath, text.getBytes());
-                    } else {
-                        //添加到缓存，但是缓存有大小限制，超过缓存大小，清除之前的缓存
-                        int ds = logBuffer.length() - bufferMaxSize;
-                        if (ds > 0) {
-                            logBuffer.delete(0, ds);//删除字符串从0~ds-1处的内容
-                        }
-                        logStr2 = logFormat.formatEnd(logStr2);
-                        logBuffer.append(logStr2);
+            if (!TextUtils.isEmpty(mConfig.getLogSavePath())) {//指定了存储目录
+                String logFilePath = getLogFileSavePath();
+                //checkFilePath(logFilePath);
+                //处理单行日志头
+                String headStr = "";
+                if (lastLogBean == null
+                        || TextUtils.isEmpty(logBean.getClazzFileName())
+                        || TextUtils.isEmpty(lastLogBean.getClazzFileName())
+                        || !logBean.getClazzFileName().equals(lastLogBean.getClazzFileName())
+                        || logBean.getLineNumber() != lastLogBean.getLineNumber()) {
+                    headStr = logFormat.formatHeader(mConfig.lineHeaderFormat, logBean);
+                    if (sampleModel && mConfig.usingGraphics) {
+                        headStr = BOTTOM_LEFT_CORNER + DOUBLE_DIVIDER + "\n" + headStr;
+                        sampleModel = false;
                     }
                 } else {
-                    logNoPermissionError();
+                    if (mConfig.usingGraphics) {//图形化输出处理
+                        headStr = MIDDLE_CORNER + "";
+                        sampleModel = true;
+                    }
+                    headStr = headStr + logFormat.formatHeader(headerFormat2, logBean);
+                }
+                lastLogBean = logBean;
+                String outputString = headStr + logBean.generateBody();
+                outputString = logFormat.formatEnd(outputString);
+
+                logStringBuffer.append(outputString);
+                if (mConfig.canWriteAble) {//是否允许应急写入
+                    byte[] bytes = logStringBuffer.toString().getBytes();
+                    logStringBuffer.delete(0, logStringBuffer.length());//清除StringBuffer中的内容
+                    loggerWriter.writeLog(logFilePath, bytes);
+                } else {//添加到缓存，但是缓存有大小限制，超过缓存大小，清除之前的缓存
+                    int ds = logStringBuffer.length() - mConfig.bufferMaxSize;
+                    if (ds > 0) {//删除字符串从0~ds处的内容
+                        logStringBuffer.delete(0, ds);
+                    }
                 }
             } else {
-                Log.e(TAG, "未配置日志目录");
+                Log.e(mConfig.TAG, "未配置日志目录");
             }
         }
+    }
 
-        //destory
-        if(qdLogBean!=null) {
-            qdLogBean.setStackTraceElements(null);
-            qdLogBean.setThrowable(null);
-            qdLogBean.setMessage(null);
-            qdLogBean.setClazzFileName(null);
-            qdLogBean.setClazzName1(null);
-            qdLogBean.setTag(null);
-            qdLogBean.setType(null);
+    /*private static void checkFilePath(String logFilePath) {
+        File file = new File(logFilePath);
+        if (!file.exists()) {
+            QDFileUtil.createFile(file);
+            qdLogHeader = new QDLogHeader(mContext);
+            Gson gson = new Gson();
+            String str = gson.toJson(qdLogHeader);
+            QDFileUtil.writeFileSdcardFile(file, str + "\n", true);
+        } else {
+            if (qdLogHeader == null) {
+                qdLogHeader = new QDLogHeader(mContext);
+                String h = QDFileUtil.readFileLine(file.getAbsolutePath(), 0);
+                System.out.println("hea00=" + h);
+                if (!TextUtils.isEmpty(h)) {
+                    //h=h.substring(0,h.length()-1);
+                    //System.out.println("hea0=" + h);
+                    Gson gson = new Gson();
+                    qdLogHeader = gson.fromJson(h, QDLogHeader.class);
+                    System.out.println("hea1=" + qdLogHeader);
+                }
+            }
         }
+    }*/
+
+    private static String getLogFileSavePath() {
+        String logFileName = simpleDateFormat2.format(new Date()) + mConfig.LOGFILE_SUFFIX;
+        return mConfig.getLogSavePath() + logFileName;
     }
 
     static boolean hasDealPermissionError = true;
@@ -337,7 +319,7 @@ public class QDLogger{
         if (hasDealPermissionError) {
             hasDealPermissionError = false;
             String err = "[log打印失败，请打开存储权限]";
-            Log.e(TAG, err);
+            Log.e(mConfig.TAG, err);
             //throw new IllegalArgumentException(err);
         }
     }
@@ -347,18 +329,18 @@ public class QDLogger{
 
     private static boolean checkWritePermission(Context context) {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-            if (fouceUseExternalStorage) {//强制使用外置存储 针对Android Q以上的版本，但是需要 MANAGE_EXTERNAL_STORAGE
+            if (mConfig.saveExternalStorageAfterAndroidQ) {//强制使用外置存储 针对Android Q以上的版本，但是需要 MANAGE_EXTERNAL_STORAGE
                 return (checkPermissionStatus(mContext, permission1) && checkPermissionStatus(mContext, permission2));
             } else {
                 return true;
             }
         } else {
-            if (fouceUseExternalStorage2) {//使用外置存储
+            if (mConfig.saveExternalStorageBeforeAndroidQ) {//使用外置存储
                 if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
                     if (Environment.isExternalStorageLegacy()) {
                         return checkPermissionStatus(mContext, permission1);
                     } else {
-                        Log.e(TAG, "请在Manifest添加： android:requestLegacyExternalStorage=\"true\"");
+                        Log.e(mConfig.TAG, "请在Manifest添加： android:requestLegacyExternalStorage=\"true\"");
                         return false;
                     }
                 } else {
@@ -384,64 +366,21 @@ public class QDLogger{
         }
     }
 
-    //日志文件存放目录
-    public static String LOG_DIR_ABSOLUTEPATH;
-    public static String logFilePath;
-
-    public static void setLogPath(String dirPath) {
-        logFilePath = dirPath;
-        if(TextUtils.isEmpty(logFilePath)){
-            return;
-        }
-
-        File file;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-            if (fouceUseExternalStorage) {//强制使用外置存储 针对Android Q以上的版本，但是需要 MANAGE_EXTERNAL_STORAGE
-                file = new File(Environment.getExternalStorageDirectory(), dirPath);
-            } else {
-                File file_documents = mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-                file = new File(file_documents.getAbsoluteFile(), dirPath);
-            }
-        } else {
-            if (fouceUseExternalStorage2) {//使用外置存储
-                file = new File(Environment.getExternalStorageDirectory(), dirPath);
-            } else {
-                File file_documents = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    file_documents = mContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-                }
-                file = new File(file_documents.getAbsoluteFile(), dirPath);
-            }
-        }
-        System.out.println("日志保存路径:" + file.getAbsolutePath());
-        LOG_DIR_ABSOLUTEPATH = file.getAbsolutePath();
-        if (!TextUtils.isEmpty(LOG_DIR_ABSOLUTEPATH)) {
-            if (!LOG_DIR_ABSOLUTEPATH.trim().endsWith(File.separator)) {
-                LOG_DIR_ABSOLUTEPATH += File.separator;
-            }
-        }
-    }
-
-    public static boolean canWriteAble = true;//是否可以读写日志
-
     /**
      * 设置是否可以读写，一般在压缩文件时暂停写入。
      *
      * @param mcanWriteAble
      */
     public static void setCanWriteAble(boolean mcanWriteAble) {
-        canWriteAble = mcanWriteAble;
-        if (!mcanWriteAble) {
-            System.err.println("暂停日志文件写入权限");
-        } else {
-            System.err.println("恢复日志写入文件权限");
-        }
+        mConfig.canWriteAble = mcanWriteAble;
+        System.err.println((!mcanWriteAble ? "暂停" : "恢复") + " 日志文件写入");
     }
 
     static QDLogInterceptor mLogInterceptor;
 
     /**
      * 日志拦截器
+     *
      * @param logInterceptor
      */
     public static void setInterceptor(QDLogInterceptor logInterceptor) {
@@ -457,24 +396,29 @@ public class QDLogger{
             if (data instanceof Map) {
                 Map<Object, Object> map = (Map) data;
                 for (Map.Entry entry : map.entrySet()) {
-                    String v = (entry.getValue()+"").trim();
+                    String v = (entry.getValue() + "").trim();
                     stringBuilder.append(entry.getKey())
                             .append("=")
                             .append(v);
-                    if(!TextUtils.isEmpty(v)&&(!(v.endsWith("\n\r")&&!v.endsWith("\n")))){
+                    if (!TextUtils.isEmpty(v) && (!(v.endsWith("\n\r") && !v.endsWith("\n")))) {
                         stringBuilder.append("\n\r");
                     }
                 }
                 stringBuilder.append(tag2);
                 QDLogger.i(stringBuilder.toString());
-            } else if (data instanceof Array) {
-              /* Array map = (Array) data;
+            } else if (data instanceof Collection) {
+                Collection map = (Collection) data;
                 for (Object entry : map) {
-                    logStr = logStr + entry+"\n\r" ;
+                    stringBuilder.append(entry);
+                    if (!TextUtils.isEmpty(stringBuilder.toString()) && (!(stringBuilder.toString().endsWith("\n\r") && !stringBuilder.toString().endsWith("\n")))) {
+                        stringBuilder.append("\n\r");
+                    }
                 }
-                logStr = logStr + tag2;
-                QDLogger.i(logStr);*/
+                stringBuilder.append(tag2);
+                QDLogger.i(stringBuilder.toString());
             }
+        }else {
+            QDLogger.i(tag,"nul");
         }
     }
 
@@ -484,7 +428,7 @@ public class QDLogger{
         }
         return isDebug(mContext);
     }
-    
+
     /**
      * 判断当前应用是否是debug状态
      */
@@ -492,5 +436,9 @@ public class QDLogger{
         boolean isDebug = context.getApplicationInfo() != null &&
                 (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         return isDebug;
+    }
+
+    public static Config getConfig() {
+        return mConfig;
     }
 }
