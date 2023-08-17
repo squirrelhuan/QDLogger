@@ -8,11 +8,15 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.File;
+
 import cn.demomaster.qdlogger_library.QDLogger;
+import cn.demomaster.qdlogger_library.config.ConfigBuilder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,7 +48,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initLogger() {
-        QDLogger.init(this,"/qdlogger/");
+        ConfigBuilder configBuilder = new ConfigBuilder(this);
+        configBuilder.setSaveExternalStorageBeforeAndroidQ(false);
+        configBuilder.setSaveInternalSoragePath("/qdlogger/");
+        configBuilder.setSaveExternalStoragePath(new File(Environment.getExternalStorageDirectory(),"qdlogger/log"));
+        QDLogger.init(this,configBuilder.build());
         QDLogger.i("123 喊口号,小朋友全立定。");
     }
 

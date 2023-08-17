@@ -67,12 +67,11 @@ public class StringFormat {
         数字：[0x30,0x39](或十进制[48, 57])
         小写字母：[0x61,0x7a](或十进制[97, 122])
         大写字母：[0x41,0x5a](或十进制[65, 90])*/
-        char array[] = str.toCharArray();
+        char[] array = str.toCharArray();
         int n = 0;
-        for (int i = 0; i < array.length; i++) {//半角转全角
-            char c = array[i];
+        for (char c : array) {//半角转全角
             boolean isChinese = isChinese(c);
-           // System.out.println(c + " --> " + (isChinese ? "是" : "否"));
+            // System.out.println(c + " --> " + (isChinese ? "是" : "否"));
             if (isChinese) {
                 n = n + 2;
             } else {
@@ -84,7 +83,7 @@ public class StringFormat {
 
     //左对齐，半角转全角（原串、希望域宽、填充字符）
     public static String leftAlign(String str, int len, char c) {
-        char array[] = str.toCharArray();
+        char[] array = str.toCharArray();
         for (int i = 0; i < array.length; i++) {//半角转全角
             if (array[i] == ' ') {
                 array[i] = '\u3000';
@@ -110,7 +109,7 @@ public class StringFormat {
 
     //右对齐,半角转全角
     public static String rightAlign(String str, int len, char c) {
-        char array[] = str.toCharArray();
+        char[] array = str.toCharArray();
         for (int i = 0; i < array.length; i++) {
             if (array[i] == ' ') {
                 array[i] = '\u3000';
@@ -136,7 +135,7 @@ public class StringFormat {
 
     //全角转半角，输出默认是半角
     public static String quanToban(String str) {
-        char array[] = str.toCharArray();
+        char[] array = str.toCharArray();
         for (int i = 0; i < array.length; i++) {
             if (array[i] == '\u3000') {
                 array[i] = ' ';
@@ -163,8 +162,7 @@ public class StringFormat {
     // 完整的判断中文汉字和符号
     public static boolean isChinese(String strName) {
         char[] ch = strName.toCharArray();
-        for (int i = 0; i < ch.length; i++) {
-            char c = ch[i];
+        for (char c : ch) {
             if (isChinese(c)) {
                 return true;
             }

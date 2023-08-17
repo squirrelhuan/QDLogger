@@ -189,7 +189,7 @@ public class QDFileUtil {
      */
     public static boolean delete(String delFile) {
         File file = new File(delFile);
-        if (file == null || !file.exists()) {
+        if (!file.exists()) {
             return false;
         } else {
             if (file.isFile()) {
@@ -259,7 +259,7 @@ public class QDFileUtil {
         }
         // 删除当前目录
         if (dirFile.delete()) {
-            Log.e("--Method--", "Copy_Delete.deleteDirectory: 删除目录" + filePath + "成功！");
+            Log.e("--Method--", "deleteDirectory: " + filePath + " success！");
             return true;
         } else {
             return false;

@@ -11,7 +11,7 @@ public class Config {
     String diskCacheDir;
     public Config(ConfigBuilder builder) {
        //this.logSavePath = builder.getLogSavePath();
-       this.saveExternalStorageAfterAndroidQ = builder.saveExternalStorageAfterAndroidQ;
+        this.saveExternalStorageAfterAndroidQ = builder.saveExternalStorageAfterAndroidQ;
         this.saveExternalStorageBeforeAndroidQ = builder.saveExternalStorageBeforeAndroidQ;
         this.saveExternalStoragePath = builder.saveExternalStoragePath;
         this.saveInternalSoragePath = builder.saveInternalSoragePath;

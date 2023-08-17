@@ -119,7 +119,7 @@ public class LogFormat {
             return "";
         }
         String[] arr = str.split("\\u002E");
-        if (arr != null && arr.length >= 1) {
+        if (arr.length >= 1) {
             return arr[arr.length - 1];
         }
         return str;

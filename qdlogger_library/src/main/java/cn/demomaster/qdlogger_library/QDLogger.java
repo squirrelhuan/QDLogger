@@ -73,8 +73,8 @@ public class QDLogger {
         //log_header_ = qdLogHeader.toString()+"\n";
         if (logStringBuffer == null) {//設置打印頭
             logStringBuffer = new StringBuffer();
-            logStringBuffer.append(log_header_);
         }
+        logStringBuffer.append(log_header_);
         if (mConfig.writerMode == 0) {//mapbuffer写入
             loggerWriter = new MapBufferWriter();
         } else {//普通文件写入
